@@ -139,12 +139,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MWPdevice.cpp" />
+    <ClCompile Include="MWPdraw.cpp" />
     <ClCompile Include="MWPinput.cpp" />
     <ClCompile Include="MWPmain.cpp" />
+    <ClCompile Include="MWPplayer.cpp" />
+    <ClCompile Include="MWPutil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MWPdevice.h" />
+    <ClInclude Include="MWPdraw.h" />
     <ClInclude Include="MWPheader.h" />
     <ClInclude Include="MWPinput.h" />
+    <ClInclude Include="MWPplayer.h" />
+    <ClInclude Include="MWPutil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

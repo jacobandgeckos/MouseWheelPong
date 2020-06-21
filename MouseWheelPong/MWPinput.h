@@ -1,26 +1,19 @@
 #pragma once
 #include "MWPheader.h"
 
-struct KeyMappings
-{
-	int up;
-	int down;
-	int left;
-	int right;
-	int hit;
-};
+// struct KeyMappings;
 
 struct KeyPresses
 {
+	HANDLE device;
 	int playerNum;
-	bool isUpPressed;
-	bool isDownPressed;
-	bool isLeftPressed;
-	bool isRightPressed;
-	bool isHitPressed;
+	int scrolled;
+	bool leftButtonUp;
+	bool leftButtonDown;
+	bool rightButtonUp;
+	bool rightButtonDown;
+	bool quit;
 };
 
-void ProcessEvents();
+KeyPresses ProcessEvents();
 
-
-KeyMappings keys = {'W','S','A','D', VK_SPACE};

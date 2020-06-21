@@ -21,12 +21,36 @@
     <ClCompile Include="MWPinput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MWPutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MWPdraw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MWPplayer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MWPdevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MWPheader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MWPinput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPdraw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPplayer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPdevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

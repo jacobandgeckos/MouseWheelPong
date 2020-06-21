@@ -1,5 +1,21 @@
 #include "MWPheader.h"
 #include "MWPinput.h"
+#include "MWPutil.h"
+#include "MWPdraw.h"
+#include "MWPdevice.h"
+#include "MWPplayer.h"
+
+
+
+// our window
+// Note: globals (anything outside of a function) are initialized to zero automatically)
+Winfo globalWindow;
+
+int globalWinWidth = 800;
+int globalWinHeight = 600;
+
+bool running = true;
+bool startup = true;
 
 int CALLBACK WinMain(
 	HINSTANCE ProgramInstance,
@@ -26,21 +42,73 @@ int CALLBACK WinMain(
 
 	RegisterClass( & WindowClass );
 
+	initializeMiceToRawInput();
+	std::map<HANDLE, MWPdevice> deviceList = createDeviceList();
+
 	// Make an actual window ?
 	// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
 	HWND windowHandle = CreateWindowEx(0,WindowClass.lpszClassName, L"Mouse Wheel Pong", WS_OVERLAPPEDWINDOW|WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, ProgramInstance, 0);
 	
 	HDC MonitorContext = GetDC(windowHandle);
 
+	//setMWPSeeds(MWPrand() * 1000, MWPrand() * 1000, MWPrand() * 1000);
+	//randomBackground(&globalWindow);
+
+	background(&globalWindow, 255, 0, 0);
+
+	int everyCertainFrame = 0;
+	int everyCertainFrameCount = 10;
+
+	std::map<HANDLE, Player> mouseMapping;
+	int playerCount = 1;
+	while(startup)
+	{
+		KeyPresses key = ProcessEvents();
+		if(key.device != NULL)
+		{
+			if (key.leftButtonUp)
+				deviceList[key.device].mouse.leftButtonPressed = false;
+			else if(key.leftButtonDown)
+				deviceList[key.device].mouse.leftButtonPressed = true;
+			else if(key.rightButtonUp)
+				deviceList[key.device].mouse.rightButtonPressed = false;
+			else if(key.rightButtonDown)
+				deviceList[key.device].mouse.rightButtonPressed = true;
+
+			if(deviceList[key.device].mouse.rightButtonPressed && deviceList[key.device].mouse.leftButtonPressed && mouseMapping.find(key.device) == mouseMapping.end())
+			{
+				Player player;
+				player.playerNumber = playerCount;
+				++playerCount;
+				player.isMouseRegistered = true;
+				player.position = 0;
+				mouseMapping[key.device] = player;
+			}
+		}
+
+		if(key.quit)
+		{
+			startup = false;
+		}
+	}
+
 	while (running)
 	{
-		ProcessEvents();
+		KeyPresses key = ProcessEvents();
 
-		background(&globalWindow, 255, 0, 0);
 
+		drawHorizontalLine(&globalWindow, 100, 200, 200, 0, 255, 0);
+		drawVerticalLine(&globalWindow, 100, 300, 150, 0, 10, 150);
+		drawRectangle(&globalWindow, 200, 200, 100, 100, 0, 255, 255);
 
 		//write to global buffer here
 
+		if(everyCertainFrame == (everyCertainFrameCount-1))
+		{
+			//update device list
+			//check for disconnects
+		}
+		everyCertainFrame = (everyCertainFrame + 1) % everyCertainFrameCount;
 
 
 		RECT clientRect;
@@ -143,27 +211,19 @@ void winfoInit(Winfo* inWindow, int winWidth, int winHeight)
 	inWindow->winProperties.bmiHeader.biCompression = BI_RGB; // RGB, no compression
 }
 
-static void
-background(Winfo* window, char red, char green, char blue)
+
+void initializeMiceToRawInput()
 {
-	char* Row = (char*)window->winPixMemory;
-	for (int Y = 0; Y < window->winHeight; ++Y)
-	{
-		uint32_t* Pixel = (uint32_t*)Row;
-		for (int X = 0; X < window->winWidth; ++X)
-		{
-			/*              0  1  2  3
-			 Pixel in mem: BB GG RR xx
+	RAWINPUTDEVICE rawMice;
+	rawMice.usUsagePage = 0x01;
+	rawMice.usUsage = 0x02;
+	rawMice.dwFlags = 0;
+	rawMice.hwndTarget = 0;
 
-			 loaded into reg
-			 0x xxRRGGBB
-			 */
-			*Pixel++ = ((red << 16) | (green << 8) | blue);
 
-		}
-		Row += window->bytesPerRow;
-	}
+	RegisterRawInputDevices(&rawMice, 1, sizeof(rawMice));
 }
+
 
 // used to get resolution info for window sizing.
 // TODO: complete this function to allow for better fullscreen and window sizing
