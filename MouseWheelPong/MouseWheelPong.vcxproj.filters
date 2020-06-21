@@ -18,9 +18,15 @@
     <ClCompile Include="MWPmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MWPinput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MWPheader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPinput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -139,10 +139,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MWPinput.cpp" />
     <ClCompile Include="MWPmain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MWPheader.h" />
+    <ClInclude Include="MWPinput.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
