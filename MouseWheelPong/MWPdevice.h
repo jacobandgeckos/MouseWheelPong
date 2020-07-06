@@ -12,6 +12,7 @@ struct MWPmouse
 	bool leftButtonPressed;
 	bool rightButtonPressed;
 	bool middleButtonPressed;
+	int scrollAmount;
 };
 
 struct MWPdevice

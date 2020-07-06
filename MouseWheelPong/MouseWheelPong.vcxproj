@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="MWPdevice.cpp" />
     <ClCompile Include="MWPdraw.cpp" />
+    <ClCompile Include="MWPgameInfo.cpp" />
     <ClCompile Include="MWPinput.cpp" />
     <ClCompile Include="MWPmain.cpp" />
     <ClCompile Include="MWPplayer.cpp" />
@@ -149,6 +150,7 @@
   <ItemGroup>
     <ClInclude Include="MWPdevice.h" />
     <ClInclude Include="MWPdraw.h" />
+    <ClInclude Include="MWPgameInfo.h" />
     <ClInclude Include="MWPheader.h" />
     <ClInclude Include="MWPinput.h" />
     <ClInclude Include="MWPplayer.h" />

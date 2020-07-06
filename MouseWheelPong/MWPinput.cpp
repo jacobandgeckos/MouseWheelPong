@@ -27,7 +27,7 @@ KeyMappings keys = { 'W','S','A','D', VK_SPACE };
 
 extern bool running;
 
-KeyPresses ProcessEvents()
+KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 {
 	MSG event;
 	KeyPresses outputPresses = {0};
@@ -51,9 +51,27 @@ KeyPresses ProcessEvents()
 			if (raw->header.dwType == RIM_TYPEMOUSE)
 			{
 				outputPresses.device = raw->header.hDevice;
+				if(devices.find(raw->header.hDevice) == devices.end())
+				{
+					MWPdevice mouse = { 0 };
+					mouse.deviceHandle = raw->header.hDevice;
+					mouse.type = MWPMOUSE;
+					devices[raw->header.hDevice] = mouse;
+				}
 				if ((raw->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) == RI_MOUSE_WHEEL)
 				{
-					outputPresses.scrolled = (int)(raw->data.mouse.usButtonData);
+					int scrolled = devices[raw->header.hDevice].mouse.scrollAmount + (short)(raw->data.mouse.usButtonData);
+					int up = (scrolled / WHEEL_DELTA);
+					if(up > 0)
+					{
+						outputPresses.scrolledUp = true;
+					}
+					else if(up < 0)
+					{
+						outputPresses.scrolledDown = true;
+					}
+					//devices[raw->header.hDevice].mouse.scrollAmount = scrolled % WHEEL_DELTA;
+					devices[raw->header.hDevice].mouse.scrollAmount = 0;
 					/*
 					std::wstringstream s;
 					s << "Mouse: " << raw->header.hDevice  //how to differentiate mice
@@ -80,6 +98,13 @@ KeyPresses ProcessEvents()
 				}
 			}
 			delete[] lpb;
+			return outputPresses;
+		}
+		case WM_QUIT:
+		case WM_CLOSE:
+		{
+			outputPresses.quit = true;
+			running = false;
 			break;
 		}
 
@@ -138,6 +163,10 @@ KeyPresses ProcessEvents()
 				{
 
 				}
+				else if (VKCode == VK_RETURN)
+				{
+					outputPresses.accept = true;
+				}
 				else if (VKCode == VK_ESCAPE)
 				{
 					running = false;
@@ -150,9 +179,10 @@ KeyPresses ProcessEvents()
 			int AltKeyWasDown = (event.lParam & (1 << 29));
 			if (VKCode == VK_F4 && AltKeyWasDown)
 			{
+				outputPresses.quit = true;
 				running = false;
 			}
-			break;
+			return outputPresses;
 		}
 		default:
 		{

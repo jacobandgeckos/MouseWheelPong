@@ -4,12 +4,14 @@
 #include "MWPdraw.h"
 #include "MWPdevice.h"
 #include "MWPplayer.h"
+#include "MWPgameInfo.h"
 
 
 
 // our window
 // Note: globals (anything outside of a function) are initialized to zero automatically)
 Winfo globalWindow;
+gameInfo GlobalGameInfo;
 
 int globalWinWidth = 800;
 int globalWinHeight = 600;
@@ -43,7 +45,7 @@ int CALLBACK WinMain(
 	RegisterClass( & WindowClass );
 
 	initializeMiceToRawInput();
-	std::map<HANDLE, MWPdevice> deviceList = createDeviceList();
+	initGameInfo(&GlobalGameInfo);
 
 	// Make an actual window ?
 	// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
@@ -54,70 +56,106 @@ int CALLBACK WinMain(
 	//setMWPSeeds(MWPrand() * 1000, MWPrand() * 1000, MWPrand() * 1000);
 	//randomBackground(&globalWindow);
 
-	background(&globalWindow, 255, 0, 0);
+	rgb BackgroundColor(255, 0, 0);
+
+	background(&globalWindow, BackgroundColor);
+	drawSpreadVerticalLines(&globalWindow, 1, rgb(255, 255, 0));
 
 	int everyCertainFrame = 0;
 	int everyCertainFrameCount = 10;
 
-	std::map<HANDLE, Player> mouseMapping;
-	int playerCount = 1;
 	while(startup)
 	{
-		KeyPresses key = ProcessEvents();
+		KeyPresses key = ProcessEvents(GlobalGameInfo.deviceList);
 		if(key.device != NULL)
 		{
 			if (key.leftButtonUp)
-				deviceList[key.device].mouse.leftButtonPressed = false;
+				GlobalGameInfo.deviceList[key.device].mouse.leftButtonPressed = false;
 			else if(key.leftButtonDown)
-				deviceList[key.device].mouse.leftButtonPressed = true;
+				GlobalGameInfo.deviceList[key.device].mouse.leftButtonPressed = true;
 			else if(key.rightButtonUp)
-				deviceList[key.device].mouse.rightButtonPressed = false;
+				GlobalGameInfo.deviceList[key.device].mouse.rightButtonPressed = false;
 			else if(key.rightButtonDown)
-				deviceList[key.device].mouse.rightButtonPressed = true;
+				GlobalGameInfo.deviceList[key.device].mouse.rightButtonPressed = true;
 
-			if(deviceList[key.device].mouse.rightButtonPressed && deviceList[key.device].mouse.leftButtonPressed && mouseMapping.find(key.device) == mouseMapping.end())
+
+			if (GlobalGameInfo.deviceList[key.device].mouse.rightButtonPressed && GlobalGameInfo.deviceList[key.device].mouse.leftButtonPressed && GlobalGameInfo.mouseMapping.find(key.device) == GlobalGameInfo.mouseMapping.end())
 			{
 				Player player;
-				player.playerNumber = playerCount;
-				++playerCount;
-				player.isMouseRegistered = true;
+				player.playerNumber = GlobalGameInfo.playerCount;
+				++GlobalGameInfo.playerCount;
 				player.position = 0;
-				mouseMapping[key.device] = player;
+				GlobalGameInfo.mouseMapping[key.device] = player;
+
+				background(&globalWindow, rgb(255, 0, 0));
+				drawSpreadVerticalLines(&globalWindow, GlobalGameInfo.playerCount - 2, rgb(255, 255, 0));
+				drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, rgb(0, 0, 0));
+			}
+			if (GlobalGameInfo.mouseMapping.find(key.device) != GlobalGameInfo.mouseMapping.end())
+			{
+				if (key.scrolledUp)
+				{
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, BackgroundColor);
+					if((GlobalGameInfo.mouseMapping[key.device].position-30 + (globalWindow.winHeight / 2))>0)
+						GlobalGameInfo.mouseMapping[key.device].position -= 30;
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, rgb(0, 0, 0));
+				}
+				else if(key.scrolledDown)
+				{
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, BackgroundColor);
+					if (globalWindow.winHeight> (GlobalGameInfo.mouseMapping[key.device].position + 30 + GlobalGameInfo.paddleHeight+ (globalWindow.winHeight / 2)))
+						GlobalGameInfo.mouseMapping[key.device].position += 30;
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, rgb(0, 0, 0));
+				}
 			}
 		}
 
-		if(key.quit)
+
+		if (key.accept)
 		{
 			startup = false;
 		}
+		else if(key.quit)
+		{
+			return 42;
+		}
+		else
+		{
+			updateScreen(windowHandle, MonitorContext);
+		}
+
 	}
 
+	bool paused = false;
 	while (running)
 	{
-		KeyPresses key = ProcessEvents();
-
-
-		drawHorizontalLine(&globalWindow, 100, 200, 200, 0, 255, 0);
-		drawVerticalLine(&globalWindow, 100, 300, 150, 0, 10, 150);
-		drawRectangle(&globalWindow, 200, 200, 100, 100, 0, 255, 255);
-
-		//write to global buffer here
-
-		if(everyCertainFrame == (everyCertainFrameCount-1))
+		KeyPresses key = ProcessEvents(GlobalGameInfo.deviceList);
+		if (!paused)
 		{
-			//update device list
-			//check for disconnects
+
+
+			drawLineB(&globalWindow, 300, 400, 10, 10, rgb(55, 38, 200));
+			drawLineB(&globalWindow, 400, 300, 10, 10, rgb(55, 38, 200));
+			drawLineB(&globalWindow, 300, 10, 10, 400, rgb(55, 38, 200));
+			drawLineB(&globalWindow, 400, 10, 10, 300, rgb(55, 38, 200));
+			//drawHorizontalLine(&globalWindow, 100, 200, 200, rgb(0, 255, 0));
+			//drawVerticalLine(&globalWindow, 100, 300, 150, rgb(0, 10, 150));
+			//drawRectangle(&globalWindow, 200, 200, 100, 100, rgb(0, 255, 255));
+			drawTriangle(&globalWindow, 500, 100, 400, 400, 550, 250, rgb(100, 255, 255));
+			rasterizeCircle(&globalWindow, 300, 300, 50, rgb(0, 0, 255));
+
+			//write to global buffer here
+
+			if (everyCertainFrame == (everyCertainFrameCount - 1))
+			{
+				//update device list
+				//check for disconnects
+				std::vector<HANDLE> disconnectedPlayer = DetectPlayerMouseDisconnect(GlobalGameInfo.mouseMapping);
+			}
+			everyCertainFrame = (everyCertainFrame + 1) % everyCertainFrameCount;
+
+			updateScreen(windowHandle, MonitorContext);
 		}
-		everyCertainFrame = (everyCertainFrame + 1) % everyCertainFrameCount;
-
-
-		RECT clientRect;
-		GetClientRect(windowHandle, &clientRect);
-
-		int newHeight = clientRect.bottom - clientRect.top;
-		int newWidth = clientRect.right - clientRect.left;
-		//Draw to the screen
-		StretchDIBits(MonitorContext, 0, 0, newWidth, newHeight, 0, 0, globalWindow.winWidth, globalWindow.winHeight, globalWindow.winPixMemory, &(globalWindow.winProperties), DIB_RGB_COLORS, SRCCOPY);
 	}
 
 	return 42;
@@ -137,12 +175,6 @@ LRESULT CALLBACK eventHandler(HWND winHandle, UINT eventType, WPARAM inputW, LPA
 			break;
 		}
 
-		case WM_QUIT:
-		case WM_CLOSE:
-		{
-			running = false;
-			break;
-		}
 
 		case WM_ACTIVATEAPP:
 		{
@@ -234,4 +266,15 @@ void getMonitorInfo( MONITORINFO * monitorDim )
 	// https://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar
 	// https://docs.microsoft.com/en-us/windows/win32/learnwin32/creating-a-window
 	// https://stackoverflow.com/questions/28968012/win32-add-black-borders-to-fullscreen-window
+}
+
+inline void updateScreen(HWND windowHandle, HDC MonitorContext)
+{
+	RECT clientRect;
+	GetClientRect(windowHandle, &clientRect);
+
+	int newHeight = clientRect.bottom - clientRect.top;
+	int newWidth = clientRect.right - clientRect.left;
+	//Draw to the screen
+	StretchDIBits(MonitorContext, 0, 0, newWidth, newHeight, 0, 0, globalWindow.winWidth, globalWindow.winHeight, globalWindow.winPixMemory, &(globalWindow.winProperties), DIB_RGB_COLORS, SRCCOPY);
 }
