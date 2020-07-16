@@ -84,18 +84,47 @@ struct line
 		
 		decideVar = lowSlope ? (2 * dx - dy) : (2 * dy - dx);
 	}
+
+	line(const point & p1, const point & p2)
+	{
+		if (p1.y < p2.y)
+		{
+			xHi = p2.x;
+			yHi = p2.y;
+			xLo = p1.x;
+			yLo = p1.x;
+		}
+		else
+		{
+			xHi = p1.x;
+			yHi = p1.y;
+			xLo = p2.x;
+			yLo = p2.y;
+		}
+		curX = xLo;
+		curY = yLo;
+
+		inc = (xHi > xLo) ? 1 : -1;
+
+		dx = (inc == 1) ? xHi - xLo : xLo - xHi;
+		dy = yHi - yLo;
+
+		// Note: slope calculations based on (y, x)
+		//       inverse of usual (x, y) to accomodate drawing from Low y to High y)
+		lowSlope = dx < dy;
+
+		decideVar = lowSlope ? (2 * dx - dy) : (2 * dy - dx);
+	}
 };
 
 
-inline int32_t abs(int32_t abs);
 inline void setPixel(uint32_t *pixel, const rgb & color);
 void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color);
 void background(Winfo* window, const rgb & color);
 void randomBackground(Winfo* window);
 void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, const rgb & color);
-void drawVerticalLine(Winfo* window, uint32_t y0, uint32_t y1, uint32_t x, const  rgb & color);
+void drawVerticalLine(Winfo* window, uint32_t x, uint32_t y0, uint32_t y1, const  rgb & color);
 void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color);
-void drawLineB(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, const rgb & color);
 void drawRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb & color);
 void rasterizeRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb & color);
 void drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color);

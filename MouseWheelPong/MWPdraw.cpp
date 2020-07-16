@@ -73,7 +73,7 @@ void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, con
 	}
 }
 
-void drawVerticalLine(Winfo* window, uint32_t y0, uint32_t y1, uint32_t x, const rgb &color)
+void drawVerticalLine(Winfo* window, uint32_t x, uint32_t y0, uint32_t y1, const rgb &color)
 {
 	int index;
 	int endY;
@@ -101,8 +101,6 @@ void drawVerticalLine(Winfo* window, uint32_t y0, uint32_t y1, uint32_t x, const
 // Takes in line 
 void bLineNext(line & ln)
 {
-	// TODO: Change line struct to accept 2 const point structs instead of 4 uint32_ts?
-
 	// Reverse (y, x) Low Slope Line
 	if(ln.lowSlope)
 	{
@@ -128,38 +126,66 @@ void bLineNext(line & ln)
 	}
 }
 
-void fillTriangle(const point & vertex1, const point & vertex2, const point & vertex3) {
+void fillTriangle(Winfo* window, const point & p1, const point & p2, const point & p3, const rgb & color) {
 	//First, set 3 points: high, mid and low.
-	//point* vHi;
-	//point* vMid;
-	//point* vLo;
 
-	// just make these lines instead?
-	// TODO: Change line struct to accept 2 const point structs instead of 4 uint32_ts?
+	const point* vHi = &p1;
+	const point* vMid = &p2;
+	const point* vLo = &p3;
 
-	// TODO: sort/set point pointers, or sort points into lines
+	if (vLo->y > vMid->y) 
+	{
+		std::swap(vLo, vMid);
+	}
+	if (vMid->y > vHi->y)
+	{
+		std::swap(vMid, vHi);
+	}
+	if (vLo->y > vMid->y)
+	{
+		std::swap(vLo, vMid);
+	}
 
-	//line lHi(vHi, vMid);   
-	//line lLo(vMid, vLo);   // declare this later?, or assign it's value to lHi (rename to lHalf?) after it's done being used on the first half.
-	//line lFull(vHi, vMid);
+	// TODO: Add exceptions for when one or all sides of triangle are straight lines?
 
-	//will there be a left and right version?
-	//bool midLeft = vMid->x <= vHi->x; // is this the right de-pointerizing syntax?  Will it help us always start lines from the left?
+	line lHi(*vHi, *vMid);   
+	line lLo(*vMid, *vLo);
+	line lFull(*vHi, *vLo);
 
-	//can left/right be resolved by drawHorizontalLine?
+	// Currently resolved by drawHorizontalLine(), is that efficient?
+	// Use this to tell if the middle height vertex is at the left or right of the triangle.
+	// bool midpointLeft = ( ((vMid->x)*2) < ((vHi->x) + (vLo->x)) );
 
+	uint32_t xLast1 = vHi->x;
+	uint32_t xLast2= vHi->x;
+	uint32_t yLast = vHi->y;
 
-	//uint32_t lastLeftX = vHi->x;
-	//uint32_t lastRightX = vHi->x;
-
-	while (true/*between high and mid y*/)
+	while ( (lHi.curY != lHi.yLo) || (lHi.curX != lHi.xLo) )
 	{
 		// after y of each side advances by 1, draw the horizontal line between the points
 		// (when 1 y advances first, wait for the other)
+		// use line.lowSlope to see which line to advance first, and which line will need more iterations to advance to the next y
+		
 
+		// This won't quite work, what if both lines have a low y/x slope in the same direction?
+		// TODO: account for cases where lines both have the same low slope 
+		while (lHi.curY == yLast)
+		{
+			xLast1 = lHi.curX;
+			bLineNext(lHi);
+		}
+		while (lFull.curY == yLast)
+		{
+			xLast2 = lFull.curX;
+			bLineNext(lHi);
+		}
+		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
+		yLast = lFull.curY;
 	}
-	//posibly one horizontal Line in between, not sure
-	while (true/*between mid and low y*/)
+
+	//posibly one horizontal Line in between, add a drawHorizontalLine here if it is missing
+
+	while ((lLo.curY != lLo.yLo) || (lLo.curX != lLo.xLo))
 	{
 
 	}
@@ -212,8 +238,8 @@ drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, 
 static void fillBottomFlatTriangle(Winfo* window, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
 {
 	/*
-	float invslope1 = ((float)(x1-x0))/((float)(y1-y0));
-	float invslope2 = ((float)(x2-x0))/((float)(y2-y0));
+	//float invslope1 = ((float)(x1-x0))/((float)(y1-y0));  // Division and floats?
+	//float invslope2 = ((float)(x2-x0))/((float)(y2-y0));  // Surely we don't need these.
 
 	float currentx1 = x0;
 	float currentx2 = x0;
@@ -254,6 +280,7 @@ rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t
 
 }
 
+
 void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color)
 {
 	uint32_t x0 = 0; 
@@ -285,6 +312,8 @@ void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & c
 		setPixelXY(window, x-y0, y-x0, color);
 	}
 }
+
+
 void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color)
 {
 	uint32_t x0 = 0; 
@@ -294,6 +323,7 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 	{
 		if(d > 0)
 		{
+			// I ruined this by moving x in front of y, because why would y ever go first?
 			drawHorizontalLine(window, x+x0, x-x0, y+y0, color);
 			drawVerticalLine(window, y-x0, y+x0, x+y0, color);
 			drawHorizontalLine(window, x+x0, x-x0, y-y0, color);
