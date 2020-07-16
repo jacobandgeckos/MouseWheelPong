@@ -1,0 +1,70 @@
+void drawLineB(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, const rgb & color)
+{
+	uint32_t* xLeft;
+	uint32_t* xRight;
+	uint32_t* yLow;
+	uint32_t* yHigh;
+
+	if(x0 < x1)
+	{
+		xLeft = &x0;
+		yLow = &y0;
+
+		xRight = &x1;
+		yHigh = &y1;
+	}
+	else
+	{
+		xLeft = &x1;
+		yLow = &y1;
+
+		xRight = &x0;
+		yHigh = &y0;
+	}
+
+	int32_t deltaX = drawAbs(*xRight - *xLeft);
+	int32_t deltaY = drawAbs(*yLow - *yHigh);
+	
+	int32_t decisionVar = 2 * deltaX - deltaY;
+
+	if (deltaY < deltaX)
+	{
+		while (*xLeft <= *xRight)
+		{
+			setPixelXY(window, *xLeft, *yLow, color);
+			++ *xLeft;
+			if (decisionVar > 0)
+			{
+				decisionVar -= (2 * deltaX);
+				*yLow = (int32_t)*yHigh - (int32_t)*yLow > 0 ? *yLow + 1 : *yLow - 1;
+			}
+			decisionVar += (2 * deltaY);
+		}
+	}
+	else
+	{
+		while (*yLow <= *yHigh)
+		{
+			setPixelXY(window, *xLeft, *yLow, color);
+			++ *yLow;
+			if (decisionVar > 0)
+			{
+				decisionVar -= (2 * deltaY);
+				++* xLeft;
+			}
+			decisionVar += (2 * deltaX);
+		}
+
+		while (*yLow >= *yHigh)
+		{
+			setPixelXY(window, *xLeft, *yLow, color);
+			-- *yLow;
+			if (decisionVar > 0)
+			{
+				decisionVar -= (2 * deltaY);
+				++* xLeft;
+			}
+			decisionVar += (2 * deltaX);
+		}
+	}
+}

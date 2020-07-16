@@ -16,6 +16,77 @@ struct rgb
 		blue = Blue;
 	}
 };
+
+struct point
+{
+	uint32_t x;
+	uint32_t y;
+
+	point(uint32_t X, uint32_t Y)
+	{
+		x = X;
+		y = Y;
+	}
+
+};
+
+// stores info for drawing a line from the Low y point to the High y pointo
+struct line
+{
+	// TODO: Change line struct to accept 2 const point structs instead of 4 uint32_ts?
+
+	// start and endpoints of line
+	uint32_t xHi;
+	uint32_t yHi;
+	uint32_t xLo;
+	uint32_t yLo;
+
+	// info needed to draw the line
+	uint32_t dx;
+	uint32_t dy;
+
+	int32_t inc;
+	int32_t decideVar;
+
+	uint32_t curX;
+	uint32_t curY;
+
+	bool lowSlope;
+	
+	
+	line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2)
+	{
+		if (y1 < y2)
+		{
+			xHi = x2;
+			yHi = y2;
+			xLo = x1;
+			yLo = y1;
+		}
+		else
+		{
+			xHi = x1;
+			yHi = y1;
+			xLo = x2;
+			yLo = y2;
+		}
+		curX = xLo;
+		curY = yLo;
+
+		inc = (xHi > xLo) ? 1 : -1;
+
+		dx = (inc == 1) ? xHi - xLo: xLo - xHi;
+		dy = yHi - yLo;
+
+		// Note: slope calculations based on (y, x)
+		//       inverse of usual (x, y) to accomodate drawing from Low y to High y)
+		lowSlope = dx < dy;
+		
+		decideVar = lowSlope ? (2 * dx - dy) : (2 * dy - dx);
+	}
+};
+
+
 inline int32_t abs(int32_t abs);
 inline void setPixel(uint32_t *pixel, const rgb & color);
 void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color);
@@ -31,4 +102,6 @@ void drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t
 void rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color);
 void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color);
 void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color);
-void drawPaddlesRegistrationScreen(Winfo* window, std::map<HANDLE, Player> & mouseMapping, const rgb & color);
+void drawPaddlesRegistrationScreen(Winfo* window, Player * players, int numberOfPlayers, const rgb & color);
+void bLineNext(line& ln);
+void drawLine(Winfo* window, line & ln, const rgb & color);

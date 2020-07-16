@@ -2,11 +2,10 @@
 #include "MWPheader.h"
 #include "MWPdevice.h"
 
+
 struct Player
 {
-	int playerNumber;
+	//int playerNumber; //this will just be the index into the array of players now
 	int position;
 	bool isMouseConnected;
 };
-
-std::vector<HANDLE> DetectPlayerMouseDisconnect(std::map<HANDLE, Player> & mouseMapping);

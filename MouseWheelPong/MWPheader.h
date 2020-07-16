@@ -6,6 +6,11 @@
 #include <vector>
 #include <iterator>
 
+// Where our winPixMemory is located in memory
+#define WIN_MEM_START 0
+
+#define MAX_PLAYERS 100
+
 struct Winfo
 {
 	int winWidth;
@@ -27,5 +32,3 @@ void initializeMiceToRawInput();
 
 inline void updateScreen(HWND windowHandle, HDC MonitorContext);
 
-// Where our winPixMemory is located in memory
-#define WIN_MEM_START 0

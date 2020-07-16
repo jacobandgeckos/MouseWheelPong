@@ -1,34 +1,45 @@
 #include "MWPdevice.h"
 
-std::map<HANDLE,MWPdevice> createDeviceList()
+void createDevice(std::map<HANDLE, MWPdevice>& out, int playerNumber, HANDLE deviceHandle, MWPdeviceType type)
 {
-	std::map<HANDLE, MWPdevice> out;
+	MWPdevice device = { 0 };
+	device.assignedPlayer = playerNumber; //assign number greater than the max number of players
+	device.deviceHandle = deviceHandle;
+	device.type = type;
+	out[deviceHandle] = device;
+}
 
+
+void registerDevice(std::map<HANDLE, MWPdevice>& out, std::map<int, HANDLE>& reverseOut,int playerNumber, HANDLE deviceHandle)
+{
+	out[deviceHandle].assignedPlayer = playerNumber;
+	reverseOut[playerNumber] = deviceHandle;
+}
+
+
+void createDeviceList(std::map<HANDLE, MWPdevice>& out)
+{
 	UINT nDevices;
 	PRAWINPUTDEVICELIST pRawInputDeviceList;
 	if (GetRawInputDeviceList(NULL, &nDevices, sizeof(RAWINPUTDEVICELIST)) != 0)
 	{
-		return out;
+		return;
 	}
 	if ((pRawInputDeviceList = (PRAWINPUTDEVICELIST)malloc(sizeof(RAWINPUTDEVICELIST) * nDevices)) == NULL)
 	{
-		return out;
+		return;
 	}
 	if (GetRawInputDeviceList(pRawInputDeviceList, &nDevices, sizeof(RAWINPUTDEVICELIST)) == ((UINT)-1)) 
 	{ 
-		return out; 
+		return; 
     }
 	// do the job...
 	for (unsigned int i = 0; i < nDevices; ++i)
 	{
 		if (pRawInputDeviceList[i].dwType == RIM_TYPEMOUSE)
 		{
-			MWPdevice mouse = {0};
-			mouse.deviceHandle = pRawInputDeviceList[i].hDevice;
-			mouse.type = MWPMOUSE;
-			out[pRawInputDeviceList[i].hDevice] = mouse;
+			createDevice(out, MAX_PLAYERS + 1, pRawInputDeviceList[i].hDevice, MWPMOUSE);
 		}
 	}
 	free(pRawInputDeviceList);
-	return out;
 }

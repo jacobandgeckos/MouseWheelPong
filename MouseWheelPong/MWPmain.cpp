@@ -49,7 +49,8 @@ int CALLBACK WinMain(
 
 	// Make an actual window ?
 	// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
-	HWND windowHandle = CreateWindowEx(0,WindowClass.lpszClassName, L"Mouse Wheel Pong", WS_OVERLAPPEDWINDOW|WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, ProgramInstance, 0);
+	// Note on window dimensions: Height = titlebar + (2*border + shadow); Width = 2*(border+shadow); Guesstimate: titlebar=30, border=1, shadow = 8.  Find programatically?
+	HWND windowHandle = CreateWindowEx(0,WindowClass.lpszClassName, L"Mouse Wheel Pong", WS_OVERLAPPEDWINDOW|WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, globalWindow.winWidth+16, globalWindow.winHeight+39, 0, 0, ProgramInstance, 0);
 	
 	HDC MonitorContext = GetDC(windowHandle);
 
@@ -59,7 +60,6 @@ int CALLBACK WinMain(
 	rgb BackgroundColor(255, 0, 0);
 
 	background(&globalWindow, BackgroundColor);
-	drawSpreadVerticalLines(&globalWindow, 1, rgb(255, 255, 0));
 
 	int everyCertainFrame = 0;
 	int everyCertainFrameCount = 10;
@@ -69,45 +69,48 @@ int CALLBACK WinMain(
 		KeyPresses key = ProcessEvents(GlobalGameInfo.deviceList);
 		if(key.device != NULL)
 		{
+			MWPdevice & device = GlobalGameInfo.deviceList[key.device];
 			if (key.leftButtonUp)
-				GlobalGameInfo.deviceList[key.device].mouse.leftButtonPressed = false;
+				device.mouse.leftButtonPressed = false;
 			else if(key.leftButtonDown)
-				GlobalGameInfo.deviceList[key.device].mouse.leftButtonPressed = true;
+				device.mouse.leftButtonPressed = true;
 			else if(key.rightButtonUp)
-				GlobalGameInfo.deviceList[key.device].mouse.rightButtonPressed = false;
+				device.mouse.rightButtonPressed = false;
 			else if(key.rightButtonDown)
-				GlobalGameInfo.deviceList[key.device].mouse.rightButtonPressed = true;
+				device.mouse.rightButtonPressed = true;
 
 
-			if (GlobalGameInfo.deviceList[key.device].mouse.rightButtonPressed && GlobalGameInfo.deviceList[key.device].mouse.leftButtonPressed && GlobalGameInfo.mouseMapping.find(key.device) == GlobalGameInfo.mouseMapping.end())
+
+			if (device.mouse.rightButtonPressed && device.mouse.leftButtonPressed && device.assignedPlayer > MAX_PLAYERS && GlobalGameInfo.playerCount < MAX_PLAYERS)
 			{
-				Player player;
-				player.playerNumber = GlobalGameInfo.playerCount;
+				registerDevice(GlobalGameInfo.deviceList, GlobalGameInfo.reverseDeviceList, GlobalGameInfo.playerCount, key.device);
+				Player player = { 0 };
+				GlobalGameInfo.players[GlobalGameInfo.playerCount] = player;
 				++GlobalGameInfo.playerCount;
-				player.position = 0;
-				GlobalGameInfo.mouseMapping[key.device] = player;
-
 				background(&globalWindow, rgb(255, 0, 0));
-				drawSpreadVerticalLines(&globalWindow, GlobalGameInfo.playerCount - 2, rgb(255, 255, 0));
-				drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, rgb(0, 0, 0));
+				drawSpreadVerticalLines(&globalWindow, GlobalGameInfo.playerCount - 1, rgb(255, 255, 0));
+				drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.players, GlobalGameInfo.playerCount, rgb(0, 0, 0));
+
 			}
-			if (GlobalGameInfo.mouseMapping.find(key.device) != GlobalGameInfo.mouseMapping.end())
+			
+			if (device.assignedPlayer < MAX_PLAYERS)
 			{
 				if (key.scrolledUp)
 				{
-					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, BackgroundColor);
-					if((GlobalGameInfo.mouseMapping[key.device].position-30 + (globalWindow.winHeight / 2))>0)
-						GlobalGameInfo.mouseMapping[key.device].position -= 30;
-					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, rgb(0, 0, 0));
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.players, GlobalGameInfo.playerCount, BackgroundColor);
+					if((GlobalGameInfo.players[device.assignedPlayer].position-30 + (globalWindow.winHeight / 2))>0)
+						GlobalGameInfo.players[device.assignedPlayer].position -= 30;
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.players, GlobalGameInfo.playerCount, rgb(0, 0, 0));
 				}
 				else if(key.scrolledDown)
 				{
-					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, BackgroundColor);
-					if (globalWindow.winHeight> (GlobalGameInfo.mouseMapping[key.device].position + 30 + GlobalGameInfo.paddleHeight+ (globalWindow.winHeight / 2)))
-						GlobalGameInfo.mouseMapping[key.device].position += 30;
-					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.mouseMapping, rgb(0, 0, 0));
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.players, GlobalGameInfo.playerCount, BackgroundColor);
+					if (globalWindow.winHeight> (GlobalGameInfo.players[device.assignedPlayer].position + 30 + GlobalGameInfo.paddleHeight+ (globalWindow.winHeight / 2)))
+						GlobalGameInfo.players[device.assignedPlayer].position += 30;
+					drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.players, GlobalGameInfo.playerCount, rgb(0, 0, 0));
 				}
 			}
+			
 		}
 
 
@@ -124,6 +127,23 @@ int CALLBACK WinMain(
 			updateScreen(windowHandle, MonitorContext);
 		}
 
+		if (everyCertainFrame == (everyCertainFrameCount - 1))
+		{
+			//update device list
+			//check for disconnects
+			//maybe do this https://stackoverflow.com/questions/1437634/can-windows-detect-when-a-monitor-mouse-keyboard-is-disconnected
+			std::vector<int> disconnectedPlayer = DetectPlayerMouseConnectsAndDisconnect(&GlobalGameInfo);
+			if (disconnectedPlayer.size() > 0)
+			{
+				RemoveDisconnectedPlayers(disconnectedPlayer, &GlobalGameInfo);
+				background(&globalWindow, rgb(255, 0, 0));
+				drawSpreadVerticalLines(&globalWindow, GlobalGameInfo.playerCount - 1, rgb(255, 255, 0));
+				drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.players, GlobalGameInfo.playerCount, rgb(0, 0, 0));
+			}
+			//need a way to remove disconnected mice that were not registered to a player
+		}
+		everyCertainFrame = (everyCertainFrame + 1) % everyCertainFrameCount;
+
 	}
 
 	bool paused = false;
@@ -132,15 +152,31 @@ int CALLBACK WinMain(
 		KeyPresses key = ProcessEvents(GlobalGameInfo.deviceList);
 		if (!paused)
 		{
+			
+			// TODO: Change line struct to accept 2 const point structs instead of 4 uint32_ts?
+			line curLine(50, 0, 0, 25);
+			drawLine(&globalWindow, curLine, rgb(200, 200, 0));
+			
+			curLine = line(50, 0, 25, 100);
+			drawLine(&globalWindow, curLine, rgb(200, 200, 0));
 
+			curLine = line(50, 0, 75, 100);
+			drawLine(&globalWindow, curLine, rgb(200, 200, 0));
 
-			drawLineB(&globalWindow, 300, 400, 10, 10, rgb(55, 38, 200));
-			drawLineB(&globalWindow, 400, 300, 10, 10, rgb(55, 38, 200));
-			drawLineB(&globalWindow, 300, 10, 10, 400, rgb(55, 38, 200));
-			drawLineB(&globalWindow, 400, 10, 10, 300, rgb(55, 38, 200));
-			//drawHorizontalLine(&globalWindow, 100, 200, 200, rgb(0, 255, 0));
-			//drawVerticalLine(&globalWindow, 100, 300, 150, rgb(0, 10, 150));
-			//drawRectangle(&globalWindow, 200, 200, 100, 100, rgb(0, 255, 255));
+			curLine = line(50, 0, 100, 25);
+			drawLine(&globalWindow, curLine, rgb(200, 200, 0));
+
+			
+			setPixelXY(&globalWindow,  50,   0, rgb(7, 7, 7));
+			setPixelXY(&globalWindow,   0,  25, rgb(7, 7, 7));
+			setPixelXY(&globalWindow,  25, 100, rgb(7, 7, 7));
+			setPixelXY(&globalWindow,  75, 100, rgb(7, 7, 7));
+			setPixelXY(&globalWindow, 100,  25, rgb(7, 7, 7));
+			
+
+			drawHorizontalLine(&globalWindow, 100, 200, 200, rgb(0, 255, 0));
+			drawVerticalLine(&globalWindow, 100, 300, 150, rgb(0, 10, 150));
+			drawRectangle(&globalWindow, 200, 200, 100, 100, rgb(0, 255, 255));
 			drawTriangle(&globalWindow, 500, 100, 400, 400, 550, 250, rgb(100, 255, 255));
 			rasterizeCircle(&globalWindow, 300, 300, 50, rgb(0, 0, 255));
 
@@ -150,7 +186,7 @@ int CALLBACK WinMain(
 			{
 				//update device list
 				//check for disconnects
-				std::vector<HANDLE> disconnectedPlayer = DetectPlayerMouseDisconnect(GlobalGameInfo.mouseMapping);
+				std::vector<int> disconnectedPlayer = DetectPlayerMouseConnectsAndDisconnect(&GlobalGameInfo);
 			}
 			everyCertainFrame = (everyCertainFrame + 1) % everyCertainFrameCount;
 

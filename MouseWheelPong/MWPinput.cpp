@@ -23,7 +23,8 @@ struct KeyPresses
 KeyMappings keys = { 'W','S','A','D', VK_SPACE };
 
 */
-
+RAWINPUT inputBuffer;
+UINT rawInputSize = sizeof(inputBuffer);
 
 extern bool running;
 
@@ -38,25 +39,25 @@ KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 
 		case WM_INPUT:
 		{
-			/* only registeres HIDs will go here*/
+			/*
+			// only registeres HIDs will go here
 			UINT dwSize;
 			GetRawInputData((HRAWINPUT)event.lParam, RID_INPUT, NULL, &dwSize,
 				sizeof(RAWINPUTHEADER));
 			LPBYTE lpb = new BYTE[dwSize]; //maybe want to look into creating static buffer to reduce new overhead
-			GetRawInputData((HRAWINPUT)event.lParam, RID_INPUT, lpb, &dwSize,
-				sizeof(RAWINPUTHEADER));
+			GetRawInputData((HRAWINPUT)event.lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER));
+			*/
+			GetRawInputData((HRAWINPUT)(event.lParam), RID_INPUT, &inputBuffer, &rawInputSize, sizeof(RAWINPUTHEADER));
 
-			RAWINPUT* raw = (RAWINPUT*)lpb;
+			//RAWINPUT* raw = (RAWINPUT*)lpb;
+			RAWINPUT* raw = &inputBuffer;
 
 			if (raw->header.dwType == RIM_TYPEMOUSE)
 			{
 				outputPresses.device = raw->header.hDevice;
 				if(devices.find(raw->header.hDevice) == devices.end())
 				{
-					MWPdevice mouse = { 0 };
-					mouse.deviceHandle = raw->header.hDevice;
-					mouse.type = MWPMOUSE;
-					devices[raw->header.hDevice] = mouse;
+					createDevice(devices, MAX_PLAYERS+1, raw->header.hDevice, MWPMOUSE);
 				}
 				if ((raw->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) == RI_MOUSE_WHEEL)
 				{
@@ -72,13 +73,6 @@ KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 					}
 					//devices[raw->header.hDevice].mouse.scrollAmount = scrolled % WHEEL_DELTA;
 					devices[raw->header.hDevice].mouse.scrollAmount = 0;
-					/*
-					std::wstringstream s;
-					s << "Mouse: " << raw->header.hDevice  //how to differentiate mice
-						<< " scrolled " << scroll
-						<< " amount " << scroll % WHEEL_DELTA << std::endl; //scroll amount
-					OutputDebugString(s.str().c_str());
-					*/
 				}
 				else if((raw->data.mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) == RI_MOUSE_LEFT_BUTTON_DOWN)
 				{
@@ -97,7 +91,7 @@ KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 					outputPresses.rightButtonUp = true;
 				}
 			}
-			delete[] lpb;
+			//delete[] lpb;
 			return outputPresses;
 		}
 		case WM_QUIT:

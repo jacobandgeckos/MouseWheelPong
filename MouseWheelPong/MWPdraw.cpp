@@ -16,15 +16,6 @@ inline void setPixel(uint32_t *pixel, const rgb & color)
 	*pixel = ((color.red << 16) | (color.green << 8) | color.blue);
 }
 
-inline int32_t drawAbs(int32_t testVal)
-{
-	if (testVal < 0)
-	{
-		return -testVal;
-	}
-	return testVal;
-}
-
 void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color)
 {
 	uint32_t* pixel = (uint32_t*)window->winPixMemory + window->winWidth*y + x;
@@ -52,7 +43,7 @@ void randomBackground(Winfo* window)
 
 	for(int count = 0; count < pixels; ++count)
 	{
-		setPixel(Pixel, rgb(MWPrand() * 255, MWPrand() * 255, MWPrand() * 255));
+		setPixel(Pixel, rgb((unsigned char)MWPrand() * 255, (unsigned char)MWPrand() * 255, (unsigned char)MWPrand() * 255));
 		++Pixel;
 	}
 }
@@ -107,75 +98,81 @@ void drawVerticalLine(Winfo* window, uint32_t y0, uint32_t y1, uint32_t x, const
 	}
 }
 
-void drawLineB(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, const rgb & color)
+// Takes in line 
+void bLineNext(line & ln)
 {
-	uint32_t* xLeft;
-	uint32_t* xRight;
-	uint32_t* yLow;
-	uint32_t* yHigh;
+	// TODO: Change line struct to accept 2 const point structs instead of 4 uint32_ts?
 
-	if(x0 < x1)
+	// Reverse (y, x) Low Slope Line
+	if(ln.lowSlope)
 	{
-		xLeft = &x0;
-		yLow = &y0;
-
-		xRight = &x1;
-		yHigh = &y1;
+		if (ln.decideVar > 0)
+		{
+			ln.curX += ln.inc;
+			ln.decideVar -= 2 * ln.dy;
+		}
+		ln.decideVar += 2 * ln.dx;
+		++ln.curY;
 	}
+
+	// Reverse (y, x)High Slope Line
 	else
 	{
-		xLeft = &x1;
-		yLow = &y1;
-
-		xRight = &x0;
-		yHigh = &y0;
+		if (ln.decideVar > 0)
+		{
+			++ln.curY;
+			ln.decideVar -= 2 * ln.dx;
+		}
+		ln.decideVar += 2 * ln.dy;
+		ln.curX += ln.inc;
 	}
+}
 
-	int32_t deltaX = drawAbs(*xRight - *xLeft);
-	int32_t deltaY = drawAbs(*yLow - *yHigh);
-	
-	int32_t decisionVar = 2 * deltaX - deltaY;
+void fillTriangle(const point & vertex1, const point & vertex2, const point & vertex3) {
+	//First, set 3 points: high, mid and low.
+	//point* vHi;
+	//point* vMid;
+	//point* vLo;
 
-	if (deltaY < deltaX)
+	// just make these lines instead?
+	// TODO: Change line struct to accept 2 const point structs instead of 4 uint32_ts?
+
+	// TODO: sort/set point pointers, or sort points into lines
+
+	//line lHi(vHi, vMid);   
+	//line lLo(vMid, vLo);   // declare this later?, or assign it's value to lHi (rename to lHalf?) after it's done being used on the first half.
+	//line lFull(vHi, vMid);
+
+	//will there be a left and right version?
+	//bool midLeft = vMid->x <= vHi->x; // is this the right de-pointerizing syntax?  Will it help us always start lines from the left?
+
+	//can left/right be resolved by drawHorizontalLine?
+
+
+	//uint32_t lastLeftX = vHi->x;
+	//uint32_t lastRightX = vHi->x;
+
+	while (true/*between high and mid y*/)
 	{
-		while (*xLeft <= *xRight)
-		{
-			setPixelXY(window, *xLeft, *yLow, color);
-			++ *xLeft;
-			if (decisionVar > 0)
-			{
-				decisionVar -= (2 * deltaX);
-				*yLow = (int32_t)*yHigh - (int32_t)*yLow > 0 ? *yLow + 1 : *yLow - 1;
-			}
-			decisionVar += (2 * deltaY);
-		}
-	}
-	else
-	{
-		while (*yLow <= *yHigh)
-		{
-			setPixelXY(window, *xLeft, *yLow, color);
-			++ *yLow;
-			if (decisionVar > 0)
-			{
-				decisionVar -= (2 * deltaY);
-				++* xLeft;
-			}
-			decisionVar += (2 * deltaX);
-		}
+		// after y of each side advances by 1, draw the horizontal line between the points
+		// (when 1 y advances first, wait for the other)
 
-		while (*yLow >= *yHigh)
-		{
-			setPixelXY(window, *xLeft, *yLow, color);
-			-- *yLow;
-			if (decisionVar > 0)
-			{
-				decisionVar -= (2 * deltaY);
-				++* xLeft;
-			}
-			decisionVar += (2 * deltaX);
-		}
 	}
+	//posibly one horizontal Line in between, not sure
+	while (true/*between mid and low y*/)
+	{
+
+	}
+}
+
+void drawLine(Winfo* window, line & ln, const rgb & color)
+{
+	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
+	{
+		setPixelXY(window, ln.curX, ln.curY, color);
+		bLineNext(ln);
+	}
+	setPixelXY(window, ln.curX, ln.curY, color);
 }
 
 void drawRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb & color)
@@ -190,9 +187,9 @@ void rasterizeRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, u
 {
 	uint32_t* Pixel = ((uint32_t*)window->winPixMemory) + y * window->winWidth + x;
 
-	for(int yindex = 0; yindex < height; ++yindex)
+	for(uint32_t yindex = 0; yindex < height; ++yindex)
 	{
-		for(int xindex = 0; xindex < width; ++xindex)
+		for(uint32_t xindex = 0; xindex < width; ++xindex)
 		{
 			setPixel(Pixel, color);
 			++Pixel;
@@ -204,9 +201,12 @@ void rasterizeRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, u
 void 
 drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
 {
-	drawLineB(window, x0, y0, x1, y1, color);
-	drawLineB(window, x0, y0, x2, y2, color);
-	drawLineB(window, x1, y1, x2, y2, color);
+	line curLine(x0, y0, x1, y1);	
+	drawLine(window, curLine, color);
+	curLine = line(x1, y1, x2, y2);
+	drawLine(window, curLine, color);
+	curLine = line(x2, y2, x0, y0);
+	drawLine(window, curLine, color);
 }
 
 static void fillBottomFlatTriangle(Winfo* window, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
@@ -312,7 +312,7 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 
 void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color)
 {
-	if (numberOfLines == 0)
+	if (numberOfLines < 1)
 		return;
 	int spread = window->winWidth / (numberOfLines+1);
 	for(int i  = 0; i < numberOfLines; ++i)
@@ -321,19 +321,16 @@ void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color
 	}
 }
 
-void drawPaddlesRegistrationScreen(Winfo* window, std::map<HANDLE, Player> & mouseMapping, const rgb & color)
+void drawPaddlesRegistrationScreen(Winfo* window,Player * players, int numberOfPlayers, const rgb & color)
 {
-	
-	int numOfPlayers = mouseMapping.size();
-	int positionWidth = window->winWidth/numOfPlayers;
+	if (numberOfPlayers < 1)
+		return;
+	int positionWidth = window->winWidth/numberOfPlayers;
 	int halfPositionWidth = positionWidth/2;
-	for(std::map<HANDLE, Player>::iterator it = mouseMapping.begin(); it != mouseMapping.end(); ++it)
+
+	for(int i = 0; i < numberOfPlayers; ++i)
 	{
-		rasterizeRectangle(window, positionWidth*(it->second.playerNumber-1)+halfPositionWidth, (window->winHeight/2)+it->second.position, 5, 15, color);
+		rasterizeRectangle(window, positionWidth*i + halfPositionWidth, (window->winHeight / 2) + players[i].position, 5, 15, color);
 	}
 
-	
-
-	
-	
 }
