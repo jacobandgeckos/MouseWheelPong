@@ -5,6 +5,11 @@
 #include <map>
 #include <vector>
 #include <iterator>
+#include <dbt.h>
+#include <assert.h> 
+#include <string>
+
+//#define NDEBUG
 
 // Where our winPixMemory is located in memory
 #define WIN_MEM_START 0
@@ -29,6 +34,7 @@ struct Winfo
 void winfoInit(Winfo *, int, int);
 LRESULT CALLBACK eventHandler(HWND winHandle, UINT eventType, WPARAM inputW, LPARAM inputM);
 void initializeMiceToRawInput();
+bool DoRegisterDeviceInterfaceToHwnd(GUID InterfaceClassGuid, HWND hWnd, HDEVNOTIFY *hDeviceNotify);
 
 inline void updateScreen(HWND windowHandle, HDC MonitorContext);
 

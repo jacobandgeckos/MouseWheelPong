@@ -9,19 +9,19 @@ void initGameInfo(gameInfo * gI)
 	createDeviceList(gI->deviceList);
 }
 
-std::vector<int> DetectPlayerMouseConnectsAndDisconnect(gameInfo *gI)
+std::vector<HANDLE> DetectPlayerMouseConnectsAndDisconnect(gameInfo *gI)
 {
-
-	for (int i = 0; i < gI->playerCount; ++i)
+	for (std::map<HANDLE, MWPdevice>::iterator it =  gI->deviceList.begin() ; it != gI->deviceList.end(); ++it)
 	{
-		gI->players[i].isMouseConnected = false;
+		it->second.isMouseConnected = false;
 	}
+	
 
 	UINT nDevices;
 	PRAWINPUTDEVICELIST pRawInputDeviceList;
-	if (GetRawInputDeviceList(NULL, &nDevices, sizeof(RAWINPUTDEVICELIST)) != 0) { return std::vector<int>(); }
-	if ((pRawInputDeviceList = (PRAWINPUTDEVICELIST)malloc(sizeof(RAWINPUTDEVICELIST) * nDevices)) == NULL) { return std::vector<int>(); }
-	if (GetRawInputDeviceList(pRawInputDeviceList, &nDevices, sizeof(RAWINPUTDEVICELIST)) == ((UINT)-1)) { return std::vector<int>(); }
+	if (GetRawInputDeviceList(NULL, &nDevices, sizeof(RAWINPUTDEVICELIST)) != 0) { return std::vector<HANDLE>(); }
+	if ((pRawInputDeviceList = (PRAWINPUTDEVICELIST)malloc(sizeof(RAWINPUTDEVICELIST) * nDevices)) == NULL) { return std::vector<HANDLE>(); }
+	if (GetRawInputDeviceList(pRawInputDeviceList, &nDevices, sizeof(RAWINPUTDEVICELIST)) == ((UINT)-1)) { return std::vector<HANDLE>(); }
 	// do the job...
 	for (unsigned int i = 0; i < nDevices; ++i)
 	{
@@ -30,8 +30,7 @@ std::vector<int> DetectPlayerMouseConnectsAndDisconnect(gameInfo *gI)
 			//use list to detect disconnects
 			if (gI->deviceList.find(pRawInputDeviceList[i].hDevice) != gI->deviceList.end())
 			{
-				if(gI->deviceList[pRawInputDeviceList[i].hDevice].assignedPlayer < MAX_PLAYERS)
-					gI->players[gI->deviceList[pRawInputDeviceList[i].hDevice].assignedPlayer].isMouseConnected = true;
+				gI->deviceList[pRawInputDeviceList[i].hDevice].isMouseConnected = true;	
 			}
 			else
 			{
@@ -40,34 +39,43 @@ std::vector<int> DetectPlayerMouseConnectsAndDisconnect(gameInfo *gI)
 		}
 	}
 	free(pRawInputDeviceList);
-	std::vector<int> outPlayers;
+	std::vector<HANDLE> outPlayers;
 
-	for (int i = 0; i < gI->playerCount; ++i)
+	for (std::map<HANDLE, MWPdevice>::iterator it = gI->deviceList.begin(); it != gI->deviceList.end(); ++it)
 	{
-		if (gI->players[i].isMouseConnected == false)
-			outPlayers.push_back(i);
+		if (it->second.isMouseConnected == false)
+		{
+			if (it->second.assignedPlayer < MAX_PLAYERS)
+				outPlayers.push_back(it->first);
+			else
+			{
+				std::map<HANDLE, MWPdevice>::iterator tmp = it;
+				++it;
+				gI->deviceList.erase(tmp);
+				--it;
+			}
+		}
 	}
+
 
 	return outPlayers;
 }
 
-void RemoveDisconnectedPlayers(std::vector<int> disconnectedList, gameInfo *gI)
+void RemoveDisconnectedPlayers(std::vector<HANDLE> disconnectedList, gameInfo *gI)
 {
 	for (unsigned int i = 0; i < disconnectedList.size(); ++i)
 	{
-		if (disconnectedList[i] == gI->playerCount - 1)
+		int playerNum = gI->deviceList[disconnectedList[i]].assignedPlayer;
+		if (playerNum == gI->playerCount - 1)
 		{
-			gI->deviceList.erase(gI->reverseDeviceList[disconnectedList[i]]);
-			gI->reverseDeviceList.erase(disconnectedList[i]);
+			gI->deviceList.erase(disconnectedList[i]);
 		}
 		else
 		{
-			HANDLE lastDevice = gI->reverseDeviceList[gI->playerCount - 1];
-			gI->reverseDeviceList[disconnectedList[i]] = lastDevice;
-			gI->players[disconnectedList[i]] = gI->players[gI->playerCount - 1];
-			gI->deviceList[lastDevice].assignedPlayer = disconnectedList[i];
-			gI->deviceList.erase(gI->reverseDeviceList[disconnectedList[i]]);
-			gI->reverseDeviceList.erase(gI->playerCount - 1);
+			HANDLE lastDevice = gI->players[gI->playerCount - 1].device;
+			gI->deviceList[lastDevice].assignedPlayer = playerNum;
+			gI->players[playerNum] = gI->players[gI->playerCount - 1];
+			gI->deviceList.erase(disconnectedList[i]);
 		}
 		--gI->playerCount;
 	}

@@ -5,15 +5,15 @@ void createDevice(std::map<HANDLE, MWPdevice>& out, int playerNumber, HANDLE dev
 	MWPdevice device = { 0 };
 	device.assignedPlayer = playerNumber; //assign number greater than the max number of players
 	device.deviceHandle = deviceHandle;
+	device.isMouseConnected = true;
 	device.type = type;
 	out[deviceHandle] = device;
 }
 
 
-void registerDevice(std::map<HANDLE, MWPdevice>& out, std::map<int, HANDLE>& reverseOut,int playerNumber, HANDLE deviceHandle)
+void registerDevice(std::map<HANDLE, MWPdevice>& out,int playerNumber, HANDLE deviceHandle)
 {
 	out[deviceHandle].assignedPlayer = playerNumber;
-	reverseOut[playerNumber] = deviceHandle;
 }
 
 

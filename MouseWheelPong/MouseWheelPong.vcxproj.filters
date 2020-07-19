@@ -36,6 +36,18 @@
     <ClCompile Include="MWPgameInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MWPstateMachine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MWPregistration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MWPgame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MWPtext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MWPheader.h">
@@ -57,6 +69,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MWPgameInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPstateMachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPregistration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPgame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MWPtext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

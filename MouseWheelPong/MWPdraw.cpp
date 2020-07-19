@@ -1,7 +1,6 @@
 #include "MWPdraw.h"
 #include "MWPutil.h"
 
-
 inline void setPixel(uint32_t *pixel, const rgb & color)
 {
 	// draws to an individual pixel
@@ -13,13 +12,17 @@ inline void setPixel(uint32_t *pixel, const rgb & color)
 			 loaded into reg
 			 0x xxRRGGBB
 	*/
+
 	*pixel = ((color.red << 16) | (color.green << 8) | color.blue);
 }
 
 void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color)
 {
-	uint32_t* pixel = (uint32_t*)window->winPixMemory + window->winWidth*y + x;
-	*pixel = ((color.red << 16) | (color.green << 8) | color.blue);
+	if (x < window->winWidth && y < window->winHeight)
+	{
+		uint32_t* pixel = (uint32_t*)window->winPixMemory + window->winWidth * y + x;
+		*pixel = ((color.red << 16) | (color.green << 8) | color.blue);
+	}
 }
 
 void background(Winfo* window, const rgb & color)
@@ -50,26 +53,32 @@ void randomBackground(Winfo* window)
 
 void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, const rgb & color)
 {
-	int index;
-	int endX;
-	uint32_t* Pixel = ((uint32_t*)window->winPixMemory) + window->winWidth * y;
+	if (y < window->winHeight)
+	{
+		int index;
+		int endX;
+		uint32_t* Pixel = ((uint32_t*)window->winPixMemory) + window->winWidth * y;
 
-	if(x0 < x1)
-	{
-		Pixel += x0;
-		index = x0;
-		endX = x1;
-	}
-	else
-	{
-		Pixel += x1;
-		index = x1;
-		endX = x0;
-	}
-	for(; index <= endX; ++index)
-	{
-		setPixel(Pixel, color);
-		++Pixel;
+		if (x0 < x1)
+		{
+			Pixel += x0;
+			index = x0;
+			endX = x1;
+		}
+		else
+		{
+			Pixel += x1;
+			index = x1;
+			endX = x0;
+		}
+		for (; index <= endX; ++index)
+		{
+			if (index < window->winWidth)
+			{
+				setPixel(Pixel, color);
+			}
+			++Pixel;
+		}
 	}
 }
 
@@ -156,43 +165,95 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 	// Use this to tell if the middle height vertex is at the left or right of the triangle.
 	// bool midpointLeft = ( ((vMid->x)*2) < ((vHi->x) + (vLo->x)) );
 
-	uint32_t xLast1 = vHi->x;
-	uint32_t xLast2= vHi->x;
-	uint32_t yLast = vHi->y;
+	uint32_t xLast1 = vLo->x;
+	uint32_t xLast2 = vLo->x;
+	uint32_t yLast  = vLo->y;
 
-	while ( (lHi.curY != lHi.yLo) || (lHi.curX != lHi.xLo) )
+
+	bool leftPointing = (((vMid->x) * 2) < ((vHi->x) + (vLo->x)));
+
+	bool HiLoLeftSlope = (lLo.inc == -1);
+	bool FullLeftSlope = (lFull.inc == -1);
+
+	//Triangle is getting wider during this while loop
+	while ( (lLo.curY != lLo.yHi) && (lLo.curX != lLo.xHi) )
 	{
-		// after y of each side advances by 1, draw the horizontal line between the points
-		// (when 1 y advances first, wait for the other)
-		// use line.lowSlope to see which line to advance first, and which line will need more iterations to advance to the next y
-		
+		// after y of each side advances by 1, draw the horizontal line between the points of the previous y
 
-		// This won't quite work, what if both lines have a low y/x slope in the same direction?
-		// TODO: account for cases where lines both have the same low slope 
-		while (lHi.curY == yLast)
+		xLast1 = lLo.curX;
+		bLineNext(lLo);
+
+		while (lLo.curY == yLast)
 		{
-			xLast1 = lHi.curX;
-			bLineNext(lHi);
+			if (leftPointing == HiLoLeftSlope)
+			{
+				xLast1 = lLo.curX;
+			}
+			bLineNext(lLo);
 		}
+		
+		xLast2 = lFull.curX;
+		bLineNext(lFull);
+
 		while (lFull.curY == yLast)
 		{
-			xLast2 = lFull.curX;
-			bLineNext(lHi);
+			if (leftPointing != FullLeftSlope)
+			{
+				xLast2 = lFull.curX;
+			}
+			bLineNext(lFull);
 		}
 		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
 		yLast = lFull.curY;
+
+		OutputDebugStringA(("xLast1:  " + std::to_string(xLast1) + "\n").c_str());
 	}
 
-	//posibly one horizontal Line in between, add a drawHorizontalLine here if it is missing
+	// add a drawHorizontalLine here if it is missing in the middle
 
-	while ((lLo.curY != lLo.yLo) || (lLo.curX != lLo.xLo))
+	HiLoLeftSlope = (lHi.inc == -1);
+
+	// Triangle is getting narrower during this while loop
+	while ((lHi.curY != lHi.yHi) && (lHi.curX != lHi.xHi))
 	{
+		xLast1 = lHi.curX;
+		bLineNext(lHi);
 
+		while (lHi.curY == yLast)
+		{
+			if (leftPointing != HiLoLeftSlope)
+			{
+				xLast1 = lHi.curX;
+			}
+			bLineNext(lHi);
+			
+		}
+
+		xLast2 = lFull.curX;
+		bLineNext(lFull);
+
+		while (lFull.curY == yLast)
+		{
+			if (leftPointing != FullLeftSlope)
+			{
+				xLast2 = lFull.curX;
+			}
+			bLineNext(lFull);
+		}
+		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
+		yLast = lFull.curY;
+
+		OutputDebugStringA(("xLast1:  " + std::to_string(xLast1) + "\n").c_str());
 	}
+
+	OutputDebugStringA( ("Lo:  " + std::to_string(vLo->x)  + "," + std::to_string(vLo->y)  + "   ").c_str() );
+	OutputDebugStringA( ("Mid: " + std::to_string(vMid->x) + "," + std::to_string(vMid->y) + "   ").c_str() );
+	OutputDebugStringA( ("Hi:  " + std::to_string(vHi->x)  + "," + std::to_string(vHi->y)  + "   \n").c_str() );
 }
 
 void drawLine(Winfo* window, line & ln, const rgb & color)
 {
+	ln.startLine();
 	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
 	{
 		setPixelXY(window, ln.curX, ln.curY, color);
@@ -347,7 +408,7 @@ void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color
 	int spread = window->winWidth / (numberOfLines+1);
 	for(int i  = 0; i < numberOfLines; ++i)
 	{
-		drawVerticalLine(window, 0, window->winHeight-1, (i+1)*spread ,color);
+		drawVerticalLine(window, (i + 1)*spread, 0,  window->winHeight-1 ,color);
 	}
 }
 

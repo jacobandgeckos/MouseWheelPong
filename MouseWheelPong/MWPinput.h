@@ -7,7 +7,7 @@
 struct KeyPresses
 {
 	HANDLE device;
-	int playerNum;
+	int playerNum; //maybe remove plz
 	bool scrolledUp;
 	bool scrolledDown;
 	bool leftButtonUp;

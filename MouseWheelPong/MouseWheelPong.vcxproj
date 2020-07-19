@@ -141,19 +141,27 @@
   <ItemGroup>
     <ClCompile Include="MWPdevice.cpp" />
     <ClCompile Include="MWPdraw.cpp" />
+    <ClCompile Include="MWPgame.cpp" />
     <ClCompile Include="MWPgameInfo.cpp" />
     <ClCompile Include="MWPinput.cpp" />
     <ClCompile Include="MWPmain.cpp" />
     <ClCompile Include="MWPplayer.cpp" />
+    <ClCompile Include="MWPregistration.cpp" />
+    <ClCompile Include="MWPstateMachine.cpp" />
+    <ClCompile Include="MWPtext.cpp" />
     <ClCompile Include="MWPutil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MWPdevice.h" />
     <ClInclude Include="MWPdraw.h" />
+    <ClInclude Include="MWPgame.h" />
     <ClInclude Include="MWPgameInfo.h" />
     <ClInclude Include="MWPheader.h" />
     <ClInclude Include="MWPinput.h" />
     <ClInclude Include="MWPplayer.h" />
+    <ClInclude Include="MWPregistration.h" />
+    <ClInclude Include="MWPstateMachine.h" />
+    <ClInclude Include="MWPtext.h" />
     <ClInclude Include="MWPutil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

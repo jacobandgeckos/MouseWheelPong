@@ -1,7 +1,7 @@
 #pragma once
 #include "MWPheader.h"
-#include "MWPgameInfo.h"
 #include "MWPutil.h"
+#include "MWPgameInfo.h"
 
 struct rgb
 {
@@ -14,6 +14,12 @@ struct rgb
 		red = Red;
 		green = Green;
 		blue = Blue;
+	}
+	rgb()
+	{
+		red = 0;
+		green = 0;
+		blue = 0;
 	}
 };
 
@@ -31,9 +37,9 @@ struct point
 };
 
 // stores info for drawing a line from the Low y point to the High y pointo
-struct line
+class line
 {
-	// TODO: Change line struct to accept 2 const point structs instead of 4 uint32_ts?
+	public:
 
 	// start and endpoints of line
 	uint32_t xHi;
@@ -52,7 +58,6 @@ struct line
 	uint32_t curY;
 
 	bool lowSlope;
-	
 	
 	line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2)
 	{
@@ -75,15 +80,17 @@ struct line
 
 		inc = (xHi > xLo) ? 1 : -1;
 
-		dx = (inc == 1) ? xHi - xLo: xLo - xHi;
+		dx = (inc == 1) ? xHi - xLo : xLo - xHi;
 		dy = yHi - yLo;
 
 		// Note: slope calculations based on (y, x)
 		//       inverse of usual (x, y) to accomodate drawing from Low y to High y)
 		lowSlope = dx < dy;
-		
-		decideVar = lowSlope ? (2 * dx - dy) : (2 * dy - dx);
+
+		startLine();
 	}
+	
+	
 
 	line(const point & p1, const point & p2)
 	{
@@ -92,7 +99,7 @@ struct line
 			xHi = p2.x;
 			yHi = p2.y;
 			xLo = p1.x;
-			yLo = p1.x;
+			yLo = p1.y;
 		}
 		else
 		{
@@ -113,6 +120,11 @@ struct line
 		//       inverse of usual (x, y) to accomodate drawing from Low y to High y)
 		lowSlope = dx < dy;
 
+		startLine();
+	}
+
+	void startLine()
+	{
 		decideVar = lowSlope ? (2 * dx - dy) : (2 * dy - dx);
 	}
 };
@@ -134,3 +146,4 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 void drawPaddlesRegistrationScreen(Winfo* window, Player * players, int numberOfPlayers, const rgb & color);
 void bLineNext(line& ln);
 void drawLine(Winfo* window, line & ln, const rgb & color);
+void fillTriangle(Winfo* window, const point& p1, const point& p2, const point& p3, const rgb& color);

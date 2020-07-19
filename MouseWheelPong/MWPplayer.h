@@ -5,7 +5,8 @@
 
 struct Player
 {
-	//int playerNumber; //this will just be the index into the array of players now
+	//playerNumber will just be the index into the array of players now
 	int position;
-	bool isMouseConnected;
+	HANDLE device;
+	//int score;
 };
