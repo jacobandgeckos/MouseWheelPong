@@ -175,15 +175,17 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 	bool HiLoLeftSlope = (lLo.inc == -1);
 	bool FullLeftSlope = (lFull.inc == -1);
 
+	setPixelXY(window, vLo->x, vLo->y, color);
+
 	//Triangle is getting wider during this while loop
-	while ( (lLo.curY != lLo.yHi) && (lLo.curX != lLo.xHi) )
+	while ( !((lLo.curY == lLo.yHi) && (lLo.curX == lLo.xHi)) )
 	{
 		// after y of each side advances by 1, draw the horizontal line between the points of the previous y
 
 		xLast1 = lLo.curX;
 		bLineNext(lLo);
 
-		while (lLo.curY == yLast)
+		while (lLo.curY == yLast && !((lLo.curY == lLo.yHi) && (lLo.curX == lLo.xHi)) )
 		{
 			if (leftPointing == HiLoLeftSlope)
 			{
@@ -195,7 +197,7 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		xLast2 = lFull.curX;
 		bLineNext(lFull);
 
-		while (lFull.curY == yLast)
+		while (lFull.curY == yLast && !((lFull.curY == lFull.yHi) && (lFull.curX == lFull.xHi)) )
 		{
 			if (leftPointing != FullLeftSlope)
 			{
@@ -205,34 +207,30 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		}
 		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
 		yLast = lFull.curY;
-
-		OutputDebugStringA(("xLast1:  " + std::to_string(xLast1) + "\n").c_str());
 	}
 
-	// add a drawHorizontalLine here if it is missing in the middle
-
+	setPixelXY(window, vMid->x, vMid->y, color);
 	HiLoLeftSlope = (lHi.inc == -1);
 
 	// Triangle is getting narrower during this while loop
-	while ((lHi.curY != lHi.yHi) && (lHi.curX != lHi.xHi))
+	while ( !((lHi.curY == lHi.yHi) && (lHi.curX == lHi.xHi)) )
 	{
 		xLast1 = lHi.curX;
 		bLineNext(lHi);
 
-		while (lHi.curY == yLast)
+		while (lHi.curY == yLast && !((lHi.curY == lHi.yHi) && (lHi.curX == lHi.xHi)) )
 		{
 			if (leftPointing != HiLoLeftSlope)
 			{
 				xLast1 = lHi.curX;
 			}
 			bLineNext(lHi);
-			
 		}
 
 		xLast2 = lFull.curX;
 		bLineNext(lFull);
 
-		while (lFull.curY == yLast)
+		while (lFull.curY == yLast && !((lFull.curY == lFull.yHi) && (lFull.curX == lFull.xHi)) )
 		{
 			if (leftPointing != FullLeftSlope)
 			{
@@ -242,13 +240,9 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		}
 		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
 		yLast = lFull.curY;
-
-		OutputDebugStringA(("xLast1:  " + std::to_string(xLast1) + "\n").c_str());
 	}
 
-	OutputDebugStringA( ("Lo:  " + std::to_string(vLo->x)  + "," + std::to_string(vLo->y)  + "   ").c_str() );
-	OutputDebugStringA( ("Mid: " + std::to_string(vMid->x) + "," + std::to_string(vMid->y) + "   ").c_str() );
-	OutputDebugStringA( ("Hi:  " + std::to_string(vHi->x)  + "," + std::to_string(vHi->y)  + "   \n").c_str() );
+	setPixelXY(window, vHi->x, vHi->y, color);
 }
 
 void drawLine(Winfo* window, line & ln, const rgb & color)
