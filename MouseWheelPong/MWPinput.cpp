@@ -26,8 +26,6 @@ KeyMappings keys = { 'W','S','A','D', VK_SPACE };
 RAWINPUT inputBuffer;
 UINT rawInputSize = sizeof(inputBuffer);
 
-extern bool running;
-
 KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 {
 	MSG event;
@@ -95,10 +93,8 @@ KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 			return outputPresses;
 		}
 		case WM_QUIT:
-		case WM_CLOSE:
 		{
 			outputPresses.quit = true;
-			running = false;
 			break;
 		}
 
@@ -163,7 +159,7 @@ KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 				}
 				else if (VKCode == VK_ESCAPE)
 				{
-					running = false;
+					outputPresses.quit = true;
 				}
 				else if (VKCode == VK_SPACE)
 				{
@@ -174,7 +170,6 @@ KeyPresses ProcessEvents(std::map<HANDLE, MWPdevice> & devices)
 			if (VKCode == VK_F4 && AltKeyWasDown)
 			{
 				outputPresses.quit = true;
-				running = false;
 			}
 			return outputPresses;
 		}

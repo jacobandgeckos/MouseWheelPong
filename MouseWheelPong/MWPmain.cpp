@@ -15,7 +15,7 @@
 // Note: globals (anything outside of a function) are initialized to zero automatically)
 Winfo globalWindow;
 gameInfo GlobalGameInfo;
-MWP_States MWP_State;
+enum MWP_States MWP_State;
 RegistrationScreenAttributes regScreen;
 
 // This GUID is for all USB serial host PnP drivers, but you can replace it 
@@ -103,6 +103,7 @@ int CALLBACK WinMain(
 
 LRESULT CALLBACK eventHandler(HWND winHandle, UINT eventType, WPARAM inputW, LPARAM inputM)
 {
+	//try to process events in MWPinput, only put cases in here if they can only be intercepted at the window level
 
 	switch (eventType)
 	{
@@ -111,7 +112,7 @@ LRESULT CALLBACK eventHandler(HWND winHandle, UINT eventType, WPARAM inputW, LPA
 		switch (inputW)
 		{
 		case DBT_DEVICEARRIVAL:
-			OutputDebugStringA("Device arrived!");
+			//OutputDebugStringA("Device arrived!");
 
 			break;
 		case DBT_DEVICEREMOVECOMPLETE:
@@ -135,6 +136,12 @@ LRESULT CALLBACK eventHandler(HWND winHandle, UINT eventType, WPARAM inputW, LPA
 	}
 	case WM_SIZE:
 	{
+		break;
+	}
+
+	case WM_CLOSE:
+	{
+		running = false;
 		break;
 	}
 
