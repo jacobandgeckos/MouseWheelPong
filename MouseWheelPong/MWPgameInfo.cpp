@@ -41,20 +41,23 @@ std::vector<HANDLE> DetectPlayerMouseConnectsAndDisconnect(gameInfo *gI)
 	free(pRawInputDeviceList);
 	std::vector<HANDLE> outPlayers;
 
-	for (std::map<HANDLE, MWPdevice>::iterator it = gI->deviceList.begin(); it != gI->deviceList.end(); ++it)
+	std::map<HANDLE, MWPdevice>::iterator it = gI->deviceList.begin();
+	while (it != gI->deviceList.end())
 	{
 		if (it->second.isMouseConnected == false)
 		{
 			if (it->second.assignedPlayer < MAX_PLAYERS)
+			{
 				outPlayers.push_back(it->first);
+				++it;
+			}
 			else
 			{
-				std::map<HANDLE, MWPdevice>::iterator tmp = it;
-				++it;
-				gI->deviceList.erase(tmp);
-				--it;
+				gI->deviceList.erase(it++);
 			}
 		}
+		else
+			++it;
 	}
 
 
