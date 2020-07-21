@@ -147,3 +147,4 @@ void drawPaddlesRegistrationScreen(Winfo* window, Player * players, int numberOf
 void bLineNext(line& ln);
 void drawLine(Winfo* window, line & ln, const rgb & color);
 void fillTriangle(Winfo* window, const point& p1, const point& p2, const point& p3, const rgb& color);
+void drawNGon(Winfo* window,const int N, const int radius, double angleOffset, const point& center, const rgb& color);

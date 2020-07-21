@@ -395,6 +395,27 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 	rasterizeRectangle(window, x-x0, y-y0, 2*x0, 2*x0, color);	
 }
 
+void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, const point& center, const rgb& color)
+{
+	double angleIncrements = 2.0* 3.14159265358979323846 / N;
+	int currX = center.x+radius*cos(angleOffset); int currY = center.y+radius*sin(angleOffset);
+	int prevX; int prevY;
+	int firstX = currX;
+	int secondX = currY;
+	for (int i = 1; i < N; ++i)
+	{
+		prevX = currX;
+		prevY = currY;
+		currX = center.x + radius * cos(i* angleIncrements + angleOffset);
+		currY = center.y + radius * sin(i* angleIncrements + angleOffset);
+		line l(prevX, prevY, currX, currY);
+		drawLine(window, l, color);
+	}
+	line l(currX, currY, firstX, secondX);
+	drawLine(window, l, color);
+}
+
+
 void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color)
 {
 	if (numberOfLines < 1)

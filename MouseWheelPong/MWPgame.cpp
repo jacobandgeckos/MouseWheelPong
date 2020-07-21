@@ -45,6 +45,8 @@ void Game(KeyPresses * key)
 	drawLine(&globalWindow, ln3, rgb(0, 0, 135));
 	
 
+	drawNGon(&globalWindow, 15, min(globalWindow.winWidth/2, globalWindow.winHeight/2)-1, 0, point(globalWindow.winWidth/2, globalWindow.winHeight/2), rgb(0, 255, 0));
+
 	rasterizeCircle(&globalWindow, 300, 300, 50, rgb(0, 0, 255));
 
 	//write to global buffer here
