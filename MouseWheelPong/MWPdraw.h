@@ -148,3 +148,4 @@ void bLineNext(line& ln);
 void drawLine(Winfo* window, line & ln, const rgb & color);
 void fillTriangle(Winfo* window, const point& p1, const point& p2, const point& p3, const rgb& color);
 void drawNGon(Winfo* window,const int N, const int radius, double angleOffset, const point& center, const rgb& color);
+void drawQuadraticBCurveNaive(Winfo* window, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t cx1, uint32_t cy1, float step, const rgb& color);

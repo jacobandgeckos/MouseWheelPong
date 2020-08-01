@@ -18,6 +18,9 @@ void Game(KeyPresses * key)
 	static int everyCertainFrame = 0;
 	static int everyCertainFrameCount = 10;
 
+	static int srceen_x_it = 0;
+	static int srceen_y_it = 0;
+
 	rgb BackgroundColor(255, 0, 0);
 	background(&globalWindow, BackgroundColor);
 
@@ -44,8 +47,10 @@ void Game(KeyPresses * key)
 	drawLine(&globalWindow, ln2, rgb(0, 0, 135));
 	drawLine(&globalWindow, ln3, rgb(0, 0, 135));
 	
-
-	drawNGon(&globalWindow, 15, min(globalWindow.winWidth/2, globalWindow.winHeight/2)-1, 0, point(globalWindow.winWidth/2, globalWindow.winHeight/2), rgb(0, 255, 0));
+	srceen_x_it = (srceen_x_it + 1) % globalWindow.winWidth;
+	srceen_y_it = (srceen_y_it + 1) % globalWindow.winHeight;
+	drawQuadraticBCurveNaive(&globalWindow, 10, 300, 300, 10, srceen_x_it, srceen_y_it, 0.0001, rgb(0, 255, 0));
+	//drawNGon(&globalWindow, 15, min(globalWindow.winWidth/2, globalWindow.winHeight/2)-1, 0, point(globalWindow.winWidth/2, globalWindow.winHeight/2), rgb(0, 255, 0));
 
 	rasterizeCircle(&globalWindow, 300, 300, 50, rgb(0, 0, 255));
 

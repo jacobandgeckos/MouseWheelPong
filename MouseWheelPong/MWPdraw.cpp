@@ -440,3 +440,22 @@ void drawPaddlesRegistrationScreen(Winfo* window,Player * players, int numberOfP
 	}
 
 }
+
+/* x1 y1 is starting point, x2 y2 is end point, cx1 cy1 is the control point*/
+void drawQuadraticBCurveNaive(Winfo* window, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t cx1, uint32_t cy1, float step, const rgb& color)
+{
+	//B(t) = (1-t)[(1-t)P0+tP1] + t[(1-t)P1+tP2] , 0<=t<=1
+	// simplify to:
+	//B(t) = P1 + (1-t)^2(P0-P1)+t^2(P2-P1) , 0<=t<=1
+	int px1 = x1 - cx1;
+	int py1 = y1 - cy1;
+	int px2 = x2 - cx1;
+	int py2 = y2 - cy1;
+	for (float t = 0; t <= 1.0; t += step)
+	{
+		float oneMinT = 1 - t;
+		int bx = cx1 + (oneMinT * oneMinT * px1) + (t * t * px2);
+		int by = cy1 + (oneMinT * oneMinT * py1) + (t * t * py2);
+		setPixelXY(window, bx, by, color);
+	}
+}
