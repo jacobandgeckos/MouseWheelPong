@@ -185,7 +185,7 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		xLast1 = lLo.curX;
 		bLineNext(lLo);
 
-		while (lLo.curY == yLast && !((lLo.curY >= lLo.yHi) && (lLo.curX == lLo.xHi)) )
+		while (lLo.curY == yLast && !((lLo.curY >= lLo.yHi) && (((lLo.inc == 1) && (lLo.curX >= lLo.xHi)) || ((lLo.inc == -1) && (lLo.curX <= lLo.xHi) ) ) ) )
 		{
 			if (leftPointing == HiLoLeftSlope)
 			{
@@ -197,7 +197,7 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		xLast2 = lFull.curX;
 		bLineNext(lFull);
 
-		while (lFull.curY == yLast && !((lFull.curY >= lFull.yHi) && (lFull.curX == lFull.xHi)) )
+		while (lFull.curY == yLast && !( (lFull.curY >= lFull.yHi) && ( ( (lFull.inc == 1) && (lFull.curX >= lFull.xHi) ) || ( (lFull.inc == -1) && (lFull.curX <= lFull.xHi) ) ) ) )
 		{
 			if (leftPointing != FullLeftSlope)
 			{
@@ -218,7 +218,7 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		xLast1 = lHi.curX;
 		bLineNext(lHi);
 
-		while (lHi.curY == yLast && !((lHi.curY >= lHi.yHi) && (lHi.curX == lHi.xHi)) )
+		while ( (lHi.curY == yLast) && ! ( (lHi.curY >= lHi.yHi) && ( ( (lHi.inc == 1) && (lHi.curX >= lHi.xHi) ) || ( (lHi.inc == -1) && (lHi.curX <= lHi.xHi) ) ) ) )
 		{
 			if (leftPointing != HiLoLeftSlope)
 			{
@@ -229,8 +229,8 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 
 		xLast2 = lFull.curX;
 		bLineNext(lFull);
-
-		while (lFull.curY == yLast && !((lFull.curY >= lFull.yHi) && (lFull.curX == lFull.xHi)) )
+		
+		while (lFull.curY == yLast && !( (lFull.curY >= lFull.yHi) && ( ( (lFull.inc == 1) && (lFull.curX >= lFull.xHi) ) || ( (lFull.inc == -1) && (lFull.curX <= lFull.xHi) ) ) ) )
 		{
 			if (leftPointing != FullLeftSlope)
 			{
