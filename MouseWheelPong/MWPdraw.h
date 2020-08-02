@@ -3,26 +3,6 @@
 #include "MWPutil.h"
 #include "MWPgameInfo.h"
 
-struct rgb
-{
-	unsigned char red;
-	unsigned char green;
-	unsigned char blue;
-
-	rgb(unsigned char Red, unsigned char Green, unsigned char Blue)
-	{
-		red = Red;
-		green = Green;
-		blue = Blue;
-	}
-	rgb()
-	{
-		red = 0;
-		green = 0;
-		blue = 0;
-	}
-};
-
 struct point
 {
 	uint32_t x;

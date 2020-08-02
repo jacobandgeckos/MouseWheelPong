@@ -1,12 +1,18 @@
 #pragma once
+
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <windows.h>
-#include <iostream>
+#include <stdio.h>
+#include <string.h>
 #include <math.h>
+#include <dbt.h>
+#include <assert.h> 
+
+#include <iostream>
 #include <map>
 #include <vector>
 #include <iterator>
-#include <dbt.h>
-#include <assert.h> 
 #include <string>
 
 //#define NDEBUG
