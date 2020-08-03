@@ -134,6 +134,21 @@ struct PNG loadPNG(const char* filename)
 	//640x711 bit depth 24
 	struct chunk c;
 	struct PNGheader head;
+	c = readChunk(file);
+	if (!cmpCharTag((const char*)&(c.chunkTypeChar[0]), "IHDR"))
+	{
+		printf("Error reading IHDR chunk!\n");
+		freeChunk(c);
+		fclose(file);
+		return p;
+	}
+	head = *((struct PNGheader*)c.chunkSegment);
+	head.width = converByteOrder32((uint8_t*)&(head.width));
+	head.height = converByteOrder32((uint8_t*)&(head.height));
+	OutputDebugString((L"\n" + std::to_wstring(head.bitDepth) + L" " + std::to_wstring(head.colorType) + L"\n").c_str());
+	p.width = head.width;
+	p.height = head.height;
+	freeChunk(c);
 	while (!cmpCharTag((const char *)&(c.chunkTypeChar[0]), "IEND"))
 	{
 		c = readChunk(file);
@@ -141,17 +156,6 @@ struct PNG loadPNG(const char* filename)
 		{
 
 		}
-		else if (cmpCharTag((const char*)&(c.chunkTypeChar[0]), "IHDR"))
-		{
-			head = *((struct PNGheader*)c.chunkSegment);
-			head.width = converByteOrder32((uint8_t*)&(head.width));
-			head.height = converByteOrder32((uint8_t*)&(head.height));
-			OutputDebugString((L"\n" + std::to_wstring(head.bitDepth) + L" "+ std::to_wstring(head.colorType) + L"\n").c_str());
-
-			p.width = head.width;
-			p.height = head.height;
-		}
-
 
 		freeChunk(c);
 	}
@@ -194,8 +198,7 @@ uint32_t size(struct LinkedList* l)
 
 void deleteLL(struct LinkedList* l,void (*cleanup)(void*ptr))
 {
-	struct node* it = l->head;
-	while(it != l->tail)
+	for(struct node* it = l->head; it != l->tail;)
 	{
 		if (cleanup != NULL)
 		{
@@ -205,4 +208,5 @@ void deleteLL(struct LinkedList* l,void (*cleanup)(void*ptr))
 		it = it->next;
 		free(tmp);
 	}
+	free(l->tail);
 }
