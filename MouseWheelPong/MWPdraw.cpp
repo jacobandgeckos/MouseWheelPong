@@ -155,15 +155,9 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		std::swap(vLo, vMid);
 	}
 
-	// TODO: Add exceptions for when one or all sides of triangle are straight lines?
-
 	line lHi(*vHi, *vMid);   
 	line lLo(*vMid, *vLo);
 	line lFull(*vHi, *vLo);
-
-	// Currently resolved by drawHorizontalLine(), is that efficient?
-	// Use this to tell if the middle height vertex is at the left or right of the triangle.
-	// bool midpointLeft = ( ((vMid->x)*2) < ((vHi->x) + (vLo->x)) );
 
 	uint32_t xLast1 = vLo->x;
 	uint32_t xLast2 = vLo->x;
@@ -176,6 +170,8 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 	bool FullLeftSlope = (lFull.inc == -1);
 
 	setPixelXY(window, vLo->x, vLo->y, color);
+
+	//OutputDebugString((L"\n xHi:" + std::to_wstring(lFull.xHi)).c_str());
 
 	//Triangle is getting wider during this while loop
 	while ( !((lLo.curY == lLo.yHi) && (lLo.curX == lLo.xHi)) )
@@ -230,6 +226,8 @@ void fillTriangle(Winfo* window, const point & p1, const point & p2, const point
 		xLast2 = lFull.curX;
 		bLineNext(lFull);
 		
+		
+
 		while (lFull.curY == yLast && !( (lFull.curY >= lFull.yHi) && ( ( (lFull.inc == 1) && (lFull.curX >= lFull.xHi) ) || ( (lFull.inc == -1) && (lFull.curX <= lFull.xHi) ) ) ) )
 		{
 			if (leftPointing != FullLeftSlope)

@@ -42,10 +42,10 @@ class line
 	public:
 
 	// start and endpoints of line
-	uint32_t xHi;
-	uint32_t yHi;
-	uint32_t xLo;
-	uint32_t yLo;
+	int32_t xHi;
+	int32_t yHi;
+	int32_t xLo;
+	int32_t yLo;
 
 	// info needed to draw the line
 	uint32_t dx;
