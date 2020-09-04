@@ -58,6 +58,8 @@ int CALLBACK WinMain(
 	initGameInfo(&GlobalGameInfo);
 	initRegistrationAttributes(&regScreen);
 
+	struct PNG p = loadPNG("test.png");
+
 
 	// Make an actual window ?
 	// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
