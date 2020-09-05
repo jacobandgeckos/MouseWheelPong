@@ -16,7 +16,7 @@ struct point
 
 };
 
-// stores info for drawing a line from the Low y point to the High y pointo
+// stores info for drawing a line from the Low y point to the High y point
 class line
 {
 	public:
@@ -69,8 +69,6 @@ class line
 
 		startLine();
 	}
-	
-	
 
 	line(const point & p1, const point & p2)
 	{
