@@ -53,6 +53,9 @@ std::vector<HANDLE> DetectPlayerMouseConnectsAndDisconnect(gameInfo *gI)
 			}
 			else
 			{
+				//make sure all disconnected unregistered mice are erased here (I don't think there is anywhere else we need to remove them)
+				//also make sure any unregistered mice that are still connected are not erased
+				//then you can delete these comments
 				gI->deviceList.erase(it++);
 			}
 		}

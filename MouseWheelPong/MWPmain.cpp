@@ -127,7 +127,6 @@ LRESULT CALLBACK eventHandler(HWND winHandle, UINT eventType, WPARAM inputW, LPA
 				drawSpreadVerticalLines(&globalWindow, GlobalGameInfo.playerCount - 1, rgb(255, 255, 0));
 				drawPaddlesRegistrationScreen(&globalWindow, GlobalGameInfo.players, GlobalGameInfo.playerCount, rgb(0, 0, 0));
 			}
-			//need a way to remove disconnected mice that were not registered to a player
 		}
 
 			break;
