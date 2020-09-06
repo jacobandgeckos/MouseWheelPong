@@ -1,6 +1,9 @@
 #include "MWPdraw.h"
 #include "MWPutil.h"
 
+
+//Pixel Setting
+
 inline void setPixel(uint32_t *pixel, const rgb & color)
 {
 	// draws to an individual pixel
@@ -24,6 +27,9 @@ void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color)
 		*pixel = ((color.red << 16) | (color.green << 8) | color.blue);
 	}
 }
+
+
+// Background
 
 void background(Winfo* window, const rgb & color)
 {
@@ -50,6 +56,9 @@ void randomBackground(Winfo* window)
 		++Pixel;
 	}
 }
+
+
+// Line Drawing
 
 void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, const rgb & color)
 {
@@ -107,7 +116,6 @@ void drawVerticalLine(Winfo* window, uint32_t x, uint32_t y0, uint32_t y1, const
 	}
 }
 
-// Takes in line 
 void bLineNext(line & ln)
 {
 	// Reverse (y, x) Low Slope Line
@@ -135,117 +143,7 @@ void bLineNext(line & ln)
 	}
 }
 
-void fillTriangle(Winfo* window, const point & p1, const point & p2, const point & p3, const rgb & color) {
-	//First, set 3 points: high, mid and low.
-
-	const point* vHi = &p1;
-	const point* vMid = &p2;
-	const point* vLo = &p3;
-
-	if (vLo->y > vMid->y) 
-	{
-		std::swap(vLo, vMid);
-	}
-	if (vMid->y > vHi->y)
-	{
-		std::swap(vMid, vHi);
-	}
-	if (vLo->y > vMid->y)
-	{
-		std::swap(vLo, vMid);
-	}
-
-	// TODO: Add exceptions for when one or all sides of triangle are straight lines?
-
-	line lHi(*vHi, *vMid);   
-	line lLo(*vMid, *vLo);
-	line lFull(*vHi, *vLo);
-
-	// Currently resolved by drawHorizontalLine(), is that efficient?
-	// Use this to tell if the middle height vertex is at the left or right of the triangle.
-	// bool midpointLeft = ( ((vMid->x)*2) < ((vHi->x) + (vLo->x)) );
-
-	uint32_t xLast1 = vLo->x;
-	uint32_t xLast2 = vLo->x;
-	uint32_t yLast  = vLo->y;
-
-
-	bool leftPointing = (((vMid->x) * 2) < ((vHi->x) + (vLo->x)));
-
-	bool HiLoLeftSlope = (lLo.inc == -1);
-	bool FullLeftSlope = (lFull.inc == -1);
-
-	setPixelXY(window, vLo->x, vLo->y, color);
-
-	//Triangle is getting wider during this while loop
-	while ( !((lLo.curY == lLo.yHi) && (lLo.curX == lLo.xHi)) )
-	{
-		// after y of each side advances by 1, draw the horizontal line between the points of the previous y
-
-		xLast1 = lLo.curX;
-		bLineNext(lLo);
-
-		while (lLo.curY == yLast && !((lLo.curY == lLo.yHi) && (lLo.curX == lLo.xHi)) )
-		{
-			if (leftPointing == HiLoLeftSlope)
-			{
-				xLast1 = lLo.curX;
-			}
-			bLineNext(lLo);
-		}
-		
-		xLast2 = lFull.curX;
-		bLineNext(lFull);
-
-		while (lFull.curY == yLast && !((lFull.curY == lFull.yHi) && (lFull.curX == lFull.xHi)) )
-		{
-			if (leftPointing != FullLeftSlope)
-			{
-				xLast2 = lFull.curX;
-			}
-			bLineNext(lFull);
-		}
-		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
-		yLast = lFull.curY;
-	}
-
-	setPixelXY(window, vMid->x, vMid->y, color);
-	HiLoLeftSlope = (lHi.inc == -1);
-
-	// Triangle is getting narrower during this while loop
-	while ( !((lHi.curY == lHi.yHi) && (lHi.curX == lHi.xHi)) )
-	{
-		xLast1 = lHi.curX;
-		bLineNext(lHi);
-
-		while (lHi.curY == yLast && !((lHi.curY == lHi.yHi) && (lHi.curX == lHi.xHi)) )
-		{
-			if (leftPointing != HiLoLeftSlope)
-			{
-				xLast1 = lHi.curX;
-			}
-			bLineNext(lHi);
-		}
-
-		xLast2 = lFull.curX;
-		bLineNext(lFull);
-
-		while (lFull.curY == yLast && !((lFull.curY == lFull.yHi) && (lFull.curX == lFull.xHi)) )
-		{
-			if (leftPointing != FullLeftSlope)
-			{
-				xLast2 = lFull.curX;
-			}
-			bLineNext(lFull);
-		}
-		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
-		yLast = lFull.curY;
-	}
-
-	setPixelXY(window, vHi->x, vHi->y, color);
-}
-
-void drawLine(Winfo* window, line & ln, const rgb & color)
+void drawLine(Winfo* window, line& ln, const rgb& color)
 {
 	ln.startLine();
 	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
@@ -255,6 +153,9 @@ void drawLine(Winfo* window, line & ln, const rgb & color)
 	}
 	setPixelXY(window, ln.curX, ln.curY, color);
 }
+
+
+// Rectangles
 
 void drawRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb & color)
 {
@@ -279,8 +180,118 @@ void rasterizeRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, u
 	}
 }
 
-void 
-drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
+
+// Triangles
+
+void fillTriangle(Winfo* window, const point& p1, const point& p2, const point& p3, const rgb& color) {
+	//First, set 3 points: high, mid and low.
+
+	const point* vHi = &p1;
+	const point* vMid = &p2;
+	const point* vLo = &p3;
+
+	if (vLo->y > vMid->y)
+	{
+		std::swap(vLo, vMid);
+	}
+	if (vMid->y > vHi->y)
+	{
+		std::swap(vMid, vHi);
+	}
+	if (vLo->y > vMid->y)
+	{
+		std::swap(vLo, vMid);
+	}
+
+	line lHi(*vHi, *vMid);
+	line lLo(*vMid, *vLo);
+	line lFull(*vHi, *vLo);
+
+	uint32_t xLast1 = vLo->x;
+	uint32_t xLast2 = vLo->x;
+	uint32_t yLast = vLo->y;
+
+
+	bool leftPointing = (((vMid->x) * 2) < ((vHi->x) + (vLo->x)));
+
+	bool HiLoLeftSlope = (lLo.inc == -1);
+	bool FullLeftSlope = (lFull.inc == -1);
+
+	setPixelXY(window, vLo->x, vLo->y, color);
+
+	//OutputDebugString((L"\n xHi:" + std::to_wstring(lFull.xHi)).c_str());
+
+	//Triangle is getting wider during this while loop
+	while (!((lLo.curY == lLo.yHi) && (lLo.curX == lLo.xHi)))
+	{
+		// after y of each side advances by 1, draw the horizontal line between the points of the previous y
+
+		xLast1 = lLo.curX;
+		bLineNext(lLo);
+
+		while (lLo.curY == yLast && !((lLo.curY >= lLo.yHi) && (((lLo.inc == 1) && (lLo.curX >= lLo.xHi)) || ((lLo.inc == -1) && (lLo.curX <= lLo.xHi)))))
+		{
+			if (leftPointing == HiLoLeftSlope)
+			{
+				xLast1 = lLo.curX;
+			}
+			bLineNext(lLo);
+		}
+
+		xLast2 = lFull.curX;
+		bLineNext(lFull);
+
+		while (lFull.curY == yLast && !((lFull.curY >= lFull.yHi) && (((lFull.inc == 1) && (lFull.curX >= lFull.xHi)) || ((lFull.inc == -1) && (lFull.curX <= lFull.xHi)))))
+		{
+			if (leftPointing != FullLeftSlope)
+			{
+				xLast2 = lFull.curX;
+			}
+			bLineNext(lFull);
+		}
+		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
+		yLast = lFull.curY;
+	}
+
+	setPixelXY(window, vMid->x, vMid->y, color);
+	HiLoLeftSlope = (lHi.inc == -1);
+
+	// Triangle is getting narrower during this while loop
+	while (!((lHi.curY == lHi.yHi) && (lHi.curX == lHi.xHi)))
+	{
+		xLast1 = lHi.curX;
+		bLineNext(lHi);
+
+		while ((lHi.curY == yLast) && !((lHi.curY >= lHi.yHi) && (((lHi.inc == 1) && (lHi.curX >= lHi.xHi)) || ((lHi.inc == -1) && (lHi.curX <= lHi.xHi)))))
+		{
+			if (leftPointing != HiLoLeftSlope)
+			{
+				xLast1 = lHi.curX;
+			}
+			bLineNext(lHi);
+		}
+
+		xLast2 = lFull.curX;
+		bLineNext(lFull);
+
+
+
+		while (lFull.curY == yLast && !((lFull.curY >= lFull.yHi) && (((lFull.inc == 1) && (lFull.curX >= lFull.xHi)) || ((lFull.inc == -1) && (lFull.curX <= lFull.xHi)))))
+		{
+			if (leftPointing != FullLeftSlope)
+			{
+				xLast2 = lFull.curX;
+			}
+			bLineNext(lFull);
+		}
+		drawHorizontalLine(window, xLast1, xLast2, yLast, color);
+		yLast = lFull.curY;
+	}
+
+	setPixelXY(window, vHi->x, vHi->y, color);
+}
+
+void drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
 {
 	line curLine(x0, y0, x1, y1);	
 	drawLine(window, curLine, color);
@@ -329,12 +340,13 @@ static void fillBottomFlatTriangle(Winfo* window, uint32_t y0, uint32_t x1, uint
 	*/
 }
 
-void 
-rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
+void rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
 {
 
 }
 
+
+// Circle
 
 void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color)
 {
@@ -368,7 +380,6 @@ void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & c
 	}
 }
 
-
 void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color)
 {
 	uint32_t x0 = 0; 
@@ -395,6 +406,41 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 	rasterizeRectangle(window, x-x0, y-y0, 2*x0, 2*x0, color);	
 }
 
+
+// Polygons
+
+void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
+{
+	node* curNode = poly.head;
+	point vert1(0, 0);
+	point vert2(0, 0);
+	line curLine(vert1, vert2);
+
+	//OutputDebugString((L"\n\n Polygon " + std::to_wstring(0)).c_str());
+
+	for (int i = 0; i < size(&poly) - 1; i++)
+	{
+		vert1 = *((point*)curNode->elem);
+		curNode = curNode->next;
+		vert2 = *((point*)curNode->elem);
+
+		curLine = line(vert1, vert2);
+
+		drawLine(window, curLine, color);
+
+		//OutputDebugString((L"\n Point: " + std::to_wstring(vert1.x)).c_str());
+		//OutputDebugString((L", " + std::to_wstring(vert1.y)).c_str());
+
+		//OutputDebugString((L"\n Point: " + std::to_wstring(vert2.x)).c_str());
+		//OutputDebugString((L", " + std::to_wstring(vert2.y)).c_str());
+	}
+
+	line finLine(vert2, *((point*)poly.head->elem));
+	drawLine(window, finLine, color);
+
+	
+}
+
 void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, const point& center, const rgb& color)
 {
 	double angleIncrements = 2.0* 3.14159265358979323846 / N;
@@ -415,6 +461,189 @@ void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, 
 	drawLine(window, l, color);
 }
 
+LinkedList shClipToScreen(Winfo* window, LinkedList in_poly)
+{
+	LinkedList out_poly = createLinkedList();
+
+	node * curNode = in_poly.head;
+	point vert1(0, 0);
+	point vert2(0, 0);
+
+	for (int i = 0; i < size(&in_poly)-1; i++)
+	{
+		vert1 = *((point*)curNode->elem);
+		curNode = curNode->next;
+		vert2 = *((point*)curNode->elem);
+
+		if (0 < vert1.x && vert1.x < window->winWidth && 0 < vert1.y && vert1.y < window->winHeight)
+		{
+			if (0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight)
+			{
+				// 1 in, 2 in
+				addTailLL(&out_poly, new point(vert2));
+			}
+			else
+			{
+				// 1 in, 2 out
+				line intLine(vert1, vert2);
+				point intPoint(0, 0);
+				bool intFound = false;
+
+				intFound = yIntersection(0, intLine, intPoint);
+				
+				if(!intFound)
+				{
+					intFound = xIntersection(0, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = yIntersection(window->winHeight, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = xIntersection(window->winWidth, intLine, intPoint);
+				}
+
+				addTailLL(&out_poly, new point(intPoint));
+			}
+		}
+
+		else
+		{
+			if (0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight)
+			{
+				// 1 out, 2 in
+				line intLine(vert1, vert2);
+				point intPoint(0, 0);
+				bool intFound = false;
+
+				intFound = yIntersection(0, intLine, intPoint);
+
+				if (!intFound)
+				{
+					intFound = xIntersection(0, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = yIntersection(window->winHeight, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = xIntersection(window->winWidth, intLine, intPoint);
+				}
+
+				addTailLL(&out_poly, new point(intPoint));
+
+				addTailLL(&out_poly, new point(vert2));
+			}
+		}
+	}
+
+	vert1 = vert2;
+
+	vert2 = *((point*)in_poly.head->elem);
+
+	if (0 < vert1.x && vert1.x < window->winWidth && 0 < vert1.y && vert1.y < window->winHeight)
+	{
+		if (!(0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight))
+		{
+			// 1 in, 2 out
+			line intLine(vert1, vert2);
+			point intPoint(0, 0);
+			bool intFound = false;
+
+			intFound = yIntersection(0, intLine, intPoint);
+
+			if (!intFound)
+			{
+				intFound = xIntersection(0, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = yIntersection(window->winHeight, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = xIntersection(window->winWidth, intLine, intPoint);
+			}
+
+			addTailLL(&out_poly, new point(intPoint));
+		}
+	}
+
+	else
+	{
+		if (0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight)
+		{
+			// 1 out, 2 in
+			line intLine(vert1, vert2);
+			point intPoint(0, 0);
+			bool intFound = false;
+
+			intFound = yIntersection(0, intLine, intPoint);
+
+			if (!intFound)
+			{
+				intFound = xIntersection(0, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = yIntersection(window->winHeight, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = xIntersection(window->winWidth, intLine, intPoint);
+			}
+
+			addTailLL(&out_poly, new point(intPoint));
+		}
+	}
+
+	return out_poly;
+}
+
+bool yIntersection(int32_t yInt, line ln, point & intPoint)
+{
+	ln.startLine();
+	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
+	{
+		bLineNext(ln);
+
+		if (ln.curY == yInt)
+		{
+			intPoint = point(ln.curX, ln.curY);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool xIntersection(int32_t xInt, line ln, point & intPoint)
+{
+	ln.startLine();
+	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
+	{
+		bLineNext(ln);
+
+		if (ln.curX == xInt)
+		{
+			intPoint = point(ln.curX, ln.curY);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+// Special
 
 void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color)
 {
@@ -440,6 +669,9 @@ void drawPaddlesRegistrationScreen(Winfo* window,Player * players, int numberOfP
 	}
 
 }
+
+
+// Curves
 
 /* x1 y1 is starting point, x2 y2 is end point, cx1 cy1 is the control point*/
 void drawQuadraticBCurveNaive(Winfo* window, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t cx1, uint32_t cy1, float step, const rgb& color)
