@@ -24,6 +24,16 @@ void Game(KeyPresses * key)
 	rgb BackgroundColor(255, 0, 0);
 	background(&globalWindow, BackgroundColor);
 
+	LinkedList poly1 = createLinkedList();
+	addTailLL(&poly1, new point(40, -5));
+	addTailLL(&poly1, new point(60, -5));
+	addTailLL(&poly1, new point(80, 40));
+	addTailLL(&poly1, new point(20, 40));
+
+	LinkedList poly2 = shClipToScreen(&globalWindow, poly1);
+
+	drawPoly(&globalWindow, poly2, rgb(0, 255, 255));
+
 	fillTriangle(&globalWindow, point(125, 200), point(580, 120), point(230, 568), rgb(0, 0, 0));
 	if (blinkOn)
 	{

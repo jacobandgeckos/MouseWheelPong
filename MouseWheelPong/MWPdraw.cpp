@@ -409,6 +409,38 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 
 // Polygons
 
+void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
+{
+	node* curNode = poly.head;
+	point vert1(0, 0);
+	point vert2(0, 0);
+	line curLine(vert1, vert2);
+
+	//OutputDebugString((L"\n\n Polygon " + std::to_wstring(0)).c_str());
+
+	for (int i = 0; i < size(&poly) - 1; i++)
+	{
+		vert1 = *((point*)curNode->elem);
+		curNode = curNode->next;
+		vert2 = *((point*)curNode->elem);
+
+		curLine = line(vert1, vert2);
+
+		drawLine(window, curLine, color);
+
+		//OutputDebugString((L"\n Point: " + std::to_wstring(vert1.x)).c_str());
+		//OutputDebugString((L", " + std::to_wstring(vert1.y)).c_str());
+
+		//OutputDebugString((L"\n Point: " + std::to_wstring(vert2.x)).c_str());
+		//OutputDebugString((L", " + std::to_wstring(vert2.y)).c_str());
+	}
+
+	line finLine(vert2, *((point*)poly.head->elem));
+	drawLine(window, finLine, color);
+
+	
+}
+
 void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, const point& center, const rgb& color)
 {
 	double angleIncrements = 2.0* 3.14159265358979323846 / N;
@@ -429,6 +461,186 @@ void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, 
 	drawLine(window, l, color);
 }
 
+LinkedList shClipToScreen(Winfo* window, LinkedList in_poly)
+{
+	LinkedList out_poly = createLinkedList();
+
+	node * curNode = in_poly.head;
+	point vert1(0, 0);
+	point vert2(0, 0);
+
+	for (int i = 0; i < size(&in_poly)-1; i++)
+	{
+		vert1 = *((point*)curNode->elem);
+		curNode = curNode->next;
+		vert2 = *((point*)curNode->elem);
+
+		if (0 < vert1.x && vert1.x < window->winWidth && 0 < vert1.y && vert1.y < window->winHeight)
+		{
+			if (0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight)
+			{
+				// 1 in, 2 in
+				addTailLL(&out_poly, new point(vert2));
+			}
+			else
+			{
+				// 1 in, 2 out
+				line intLine(vert1, vert2);
+				point intPoint(0, 0);
+				bool intFound = false;
+
+				intFound = yIntersection(0, intLine, intPoint);
+				
+				if(!intFound)
+				{
+					intFound = xIntersection(0, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = yIntersection(window->winHeight, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = xIntersection(window->winWidth, intLine, intPoint);
+				}
+
+				addTailLL(&out_poly, new point(intPoint));
+			}
+		}
+
+		else
+		{
+			if (0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight)
+			{
+				// 1 out, 2 in
+				line intLine(vert1, vert2);
+				point intPoint(0, 0);
+				bool intFound = false;
+
+				intFound = yIntersection(0, intLine, intPoint);
+
+				if (!intFound)
+				{
+					intFound = xIntersection(0, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = yIntersection(window->winHeight, intLine, intPoint);
+				}
+
+				if (!intFound)
+				{
+					intFound = xIntersection(window->winWidth, intLine, intPoint);
+				}
+
+				addTailLL(&out_poly, new point(intPoint));
+
+				addTailLL(&out_poly, new point(vert2));
+			}
+		}
+	}
+
+	vert1 = vert2;
+
+	vert2 = *((point*)in_poly.head->elem);
+
+	if (0 < vert1.x && vert1.x < window->winWidth && 0 < vert1.y && vert1.y < window->winHeight)
+	{
+		if (!(0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight))
+		{
+			// 1 in, 2 out
+			line intLine(vert1, vert2);
+			point intPoint(0, 0);
+			bool intFound = false;
+
+			intFound = yIntersection(0, intLine, intPoint);
+
+			if (!intFound)
+			{
+				intFound = xIntersection(0, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = yIntersection(window->winHeight, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = xIntersection(window->winWidth, intLine, intPoint);
+			}
+
+			addTailLL(&out_poly, new point(intPoint));
+		}
+	}
+
+	else
+	{
+		if (0 < vert2.x && vert2.x < window->winWidth && 0 < vert2.y && vert2.y < window->winHeight)
+		{
+			// 1 out, 2 in
+			line intLine(vert1, vert2);
+			point intPoint(0, 0);
+			bool intFound = false;
+
+			intFound = yIntersection(0, intLine, intPoint);
+
+			if (!intFound)
+			{
+				intFound = xIntersection(0, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = yIntersection(window->winHeight, intLine, intPoint);
+			}
+
+			if (!intFound)
+			{
+				intFound = xIntersection(window->winWidth, intLine, intPoint);
+			}
+
+			addTailLL(&out_poly, new point(intPoint));
+		}
+	}
+
+	return out_poly;
+}
+
+bool yIntersection(int32_t yInt, line ln, point & intPoint)
+{
+	ln.startLine();
+	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
+	{
+		bLineNext(ln);
+
+		if (ln.curY == yInt)
+		{
+			intPoint = point(ln.curX, ln.curY);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool xIntersection(int32_t xInt, line ln, point & intPoint)
+{
+	ln.startLine();
+	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
+	{
+		bLineNext(ln);
+
+		if (ln.curX == xInt)
+		{
+			intPoint = point(ln.curX, ln.curY);
+			return true;
+		}
+	}
+	return false;
+}
 
 
 // Special
