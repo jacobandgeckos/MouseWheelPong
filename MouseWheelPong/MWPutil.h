@@ -1,6 +1,7 @@
 #pragma once
 #include "MWPheader.h"
 
+#define FOURCC(String) ((((uint32_t)(String[0]))<<0)|(((uint32_t)(String[1]))<<8)|(((uint32_t)(String[2]))<<16)|(((uint32_t)(String[3]))<<24))
 
 struct node
 {

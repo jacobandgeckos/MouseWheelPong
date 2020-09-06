@@ -67,24 +67,24 @@ char cmpCharTag(const char* arr, const char* word)
 
 struct chunk
 {
-	uint32_t length;
+	uint32_t length; //length of chunk segment
 	union {
 		uint32_t chunkType;
-		uint8_t chunkTypeChar[4];
+		uint8_t chunkTypeChar[4]; //chunk tag, for example 'IHDR'
 	};
-	void* chunkSegment;
-	uint32_t crc;
+	void* chunkSegment; //actual chunk
+	uint32_t crc; //crc for chunk tag and chunk segment
 };
 
 struct PNGheader
 {
 	uint32_t width;
 	uint32_t height;
-	uint8_t bitDepth;
-	uint8_t colorType;
-	uint8_t compressionMethod;
-	uint8_t filterMethod;
-	uint8_t interlaceMethod;
+	uint8_t bitDepth; //bits per pixel
+	uint8_t colorType; //
+	uint8_t compressionMethod; //Method 0 is ZLIB "deflate"  
+	uint8_t filterMethod; //
+	uint8_t interlaceMethod; //
 };
 
 struct chunk readChunk(FILE* fp)
@@ -98,7 +98,6 @@ struct chunk readChunk(FILE* fp)
 		fread(c.chunkSegment, c.length, 1, fp);
 	}
 	fread(&(c.crc), sizeof(uint32_t), 1, fp);
-	//OutputDebugString((std::wstring(1, c.chunkTypeChar[0]) + std::wstring(1, c.chunkTypeChar[1]) + std::wstring(1, c.chunkTypeChar[2]) + std::wstring(1, c.chunkTypeChar[3]) + L"\n").c_str());
 	return c;
 }
 
@@ -106,6 +105,31 @@ void freeChunk(struct chunk c)
 {
 	if(c.length != 0)
 		free(c.chunkSegment);
+}
+
+void processIDAT(struct PNGheader* header, struct chunk* c)
+{
+	//deflate/inflate compression with a sliding window of at most 32768 bytes
+	if (header->compressionMethod == 0)
+	{
+		char* chunkPtr = (char *) c->chunkSegment;
+		char CM = *chunkPtr & 0xF; //CM = 8  denotes the "deflate" compression method with a window size up to 32K. CM = 15 is reserved.
+		char CINFO = *chunkPtr >> 4; //For CM = 8, CINFO is the base-2 logarithm of the LZ77 window size, minus eight(CINFO = 7 indicates a 32K window size).
+		++chunkPtr;
+		char additionalFlags = *chunkPtr;
+		++chunkPtr;
+
+
+		OutputDebugString((std::to_wstring(CM) +L" "+ std::to_wstring(CINFO) + L" " + std::to_wstring(additionalFlags) + L"\n").c_str());
+		//test for BFINAL bit
+		if((*chunkPtr & (0x1 << 7)) == 0) //change to while loop
+		{
+			//(*chunkPtr & (0x3 << 6))>>6
+			OutputDebugString((std::to_wstring((*chunkPtr & (0x3 << 6)) >> 6)+ L"\n").c_str());
+			++chunkPtr;
+
+		}
+	}
 }
 
 
@@ -125,7 +149,9 @@ struct PNG loadPNG(const char* filename)
 	testByteOrder();
 	uint64_t signature;
 	fread(&signature, sizeof(uint64_t), 1, file);
+	//All values are are greater than a byte in PNG are in Network Byte Order (Big endian), so we must convert to machine endian
 	signature = converByteOrder64((uint8_t*)&signature);
+	//We will check to make sure PNG has correct signature (every PNG starts with this signature)
 	if (signature != 0x89504E470D0A1A0A)
 	{
 		printf("Error in PNG header tag: %x\n", signature);
@@ -135,7 +161,8 @@ struct PNG loadPNG(const char* filename)
 	struct chunk c;
 	struct PNGheader head;
 	c = readChunk(file);
-	if (!cmpCharTag((const char*)&(c.chunkTypeChar[0]), "IHDR"))
+	//Every PNG file starts with IHDR if not then file is corrupt
+	if (c.chunkType != FOURCC("IHDR"))
 	{
 		printf("Error reading IHDR chunk!\n");
 		freeChunk(c);
@@ -148,13 +175,25 @@ struct PNG loadPNG(const char* filename)
 	OutputDebugString((L"\n" + std::to_wstring(head.bitDepth) + L" " + std::to_wstring(head.colorType) + L"\n").c_str());
 	p.width = head.width;
 	p.height = head.height;
+
+	//Change below to malloc correct bit depth for real image (might just leave every channel 8-bits for clean output, so idk)
+	p.image = (struct rgb*) malloc(4 * sizeof(char) * p.width * p.height);
+
 	freeChunk(c);
-	while (!cmpCharTag((const char *)&(c.chunkTypeChar[0]), "IEND"))
+	//check when you read end chunk
+	while (c.chunkType != FOURCC("IEND"))
 	{
 		c = readChunk(file);
-		if (cmpCharTag((const char*)&(c.chunkTypeChar[0]), "IDAT"))
-		{
 
+		switch (c.chunkType)
+		{
+			case FOURCC("IDAT"):
+				{
+					processIDAT(&head, &c); 
+				}
+				break;
+			default:
+				break;
 		}
 
 		freeChunk(c);
