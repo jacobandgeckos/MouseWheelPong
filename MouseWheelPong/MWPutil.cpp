@@ -112,15 +112,21 @@ void processIDAT(struct PNGheader* header, struct chunk* c)
 	//deflate/inflate compression with a sliding window of at most 32768 bytes
 	if (header->compressionMethod == 0)
 	{
-		char* chunkPtr = (char *) c->chunkSegment;
-		char CM = *chunkPtr & 0xF; //CM = 8  denotes the "deflate" compression method with a window size up to 32K. CM = 15 is reserved.
-		char CINFO = *chunkPtr >> 4; //For CM = 8, CINFO is the base-2 logarithm of the LZ77 window size, minus eight(CINFO = 7 indicates a 32K window size).
+		uint8_t* chunkPtr = (uint8_t*) c->chunkSegment;
+		uint8_t CMF = *chunkPtr;
+		uint8_t CM = CMF & 0xF; //CM = 8  denotes the "deflate" compression method with a window size up to 32K. CM = 15 is reserved.
+		uint8_t CINFO = CMF >> 4; //For CM = 8, CINFO is the base-2 logarithm of the LZ77 window size, minus eight(CINFO = 7 indicates a 32K window size).
 		++chunkPtr;
-		char additionalFlags = *chunkPtr;
+		uint8_t additionalFlags = *chunkPtr;
+		uint8_t FCHECK = additionalFlags & 0x1F;
+		uint8_t FDICT = (additionalFlags >> 5) & 0x1; //check if preset dictionary
+		uint8_t FLEVEL = additionalFlags >> 6; //compression level
 		++chunkPtr;
+		
+		uint16_t checksum = ((uint16_t)CMF)*256 + ((uint16_t)additionalFlags) % 31;
+		const wchar_t* str = (checksum ? L"FCHECK BAD!" : L"FCHECK set right");
 
-
-		OutputDebugString((std::to_wstring(CM) +L" "+ std::to_wstring(CINFO) + L" " + std::to_wstring(additionalFlags) + L"\n").c_str());
+		OutputDebugString((std::to_wstring(CM) +L" "+ std::to_wstring(CINFO) + L" " + std::to_wstring(additionalFlags) + L" " + str + L"\n").c_str());
 		//test for BFINAL bit
 		if((*chunkPtr & (0x1 << 7)) == 0) //change to while loop
 		{
@@ -189,7 +195,8 @@ struct PNG loadPNG(const char* filename)
 		{
 			case FOURCC("IDAT"):
 				{
-					processIDAT(&head, &c); 
+					//can do crc check still over chunk here
+					//create linked list and add chunk segments to linked list to create stream
 				}
 				break;
 			default:
@@ -198,6 +205,8 @@ struct PNG loadPNG(const char* filename)
 
 		freeChunk(c);
 	}
+
+	processIDAT(&head, &c);
 
 
 
