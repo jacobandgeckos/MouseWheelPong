@@ -2,7 +2,8 @@
 #include "MWPutil.h"
 
 
-//Pixel Setting
+
+#pragma region Pixel
 
 inline void setPixel(uint32_t *pixel, const rgb & color)
 {
@@ -28,8 +29,10 @@ void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color)
 	}
 }
 
+#pragma endregion
 
-// Background
+
+#pragma region Background
 
 void background(Winfo* window, const rgb & color)
 {
@@ -57,8 +60,10 @@ void randomBackground(Winfo* window)
 	}
 }
 
+#pragma endregion
 
-// Line Drawing
+
+#pragma region Lines
 
 void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, const rgb & color)
 {
@@ -154,8 +159,10 @@ void drawLine(Winfo* window, line& ln, const rgb& color)
 	setPixelXY(window, ln.curX, ln.curY, color);
 }
 
+#pragma endregion
 
-// Rectangles
+
+#pragma region Rectangles
 
 void drawRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb & color)
 {
@@ -180,8 +187,10 @@ void rasterizeRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, u
 	}
 }
 
+#pragma endregion
 
-// Triangles
+
+#pragma region Triangles
 
 void fillTriangle(Winfo* window, const point& p1, const point& p2, const point& p3, const rgb& color) {
 	//First, set 3 points: high, mid and low.
@@ -345,8 +354,10 @@ void rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uin
 
 }
 
+#pragma endregion
 
-// Circle
+
+#pragma region Circle
 
 void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color)
 {
@@ -406,8 +417,10 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 	rasterizeRectangle(window, x-x0, y-y0, 2*x0, 2*x0, color);	
 }
 
+#pragma endregion
 
-// Polygons
+
+#pragma region Polygons
 
 void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
 {
@@ -437,8 +450,6 @@ void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
 
 	line finLine(vert2, *((point*)poly.head->elem));
 	drawLine(window, finLine, color);
-
-	
 }
 
 void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, const point& center, const rgb& color)
@@ -642,8 +653,10 @@ bool xIntersection(int32_t xInt, line ln, point & intPoint)
 	return false;
 }
 
+#pragma endregion
 
-// Special
+
+#pragma region Special
 
 void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color)
 {
@@ -670,8 +683,10 @@ void drawPaddlesRegistrationScreen(Winfo* window,Player * players, int numberOfP
 
 }
 
+#pragma endregion
 
-// Curves
+
+#pragma region Curves
 
 /* x1 y1 is starting point, x2 y2 is end point, cx1 cy1 is the control point*/
 void drawQuadraticBCurveNaive(Winfo* window, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t cx1, uint32_t cy1, float step, const rgb& color)
@@ -691,3 +706,5 @@ void drawQuadraticBCurveNaive(Winfo* window, uint32_t x1, uint32_t y1, uint32_t 
 		setPixelXY(window, bx, by, color);
 	}
 }
+
+#pragma endregion
