@@ -107,7 +107,7 @@ void freeChunk(struct chunk c)
 		free(c.chunkSegment);
 }
 
-void processIDAT(struct PNGheader* header, struct chunk* c)
+void processBitStream(struct PNGheader* header, struct chunk* c)
 {
 	//deflate/inflate compression with a sliding window of at most 32768 bytes
 	if (header->compressionMethod == 0)
@@ -136,6 +136,39 @@ void processIDAT(struct PNGheader* header, struct chunk* c)
 
 		}
 	}
+}
+
+const uint64_t MAX_BIT_STREAM_CHUNKS = 100;
+struct ChunkedBitStream
+{
+	void* bitStreamChunk;
+	size_t length;
+};
+
+/*
+	you will use:
+	struct ChunkedBitStream cbs[MAX_BIT_STREAM_CHUNKS];
+	int currentBitStreamChunk = 0;
+	int numberOfChunksInBitStream = 0;
+*/
+
+void AddChunkToBitStream(ChunkedBitStream* cbs,void*chunk,uint32_t chunkLength, int* numberOfChunksInBitStream)
+{
+	cbs[*numberOfChunksInBitStream].bitStreamChunk = chunk;
+	cbs[*numberOfChunksInBitStream].length = chunkLength;
+	(*numberOfChunksInBitStream) = (*numberOfChunksInBitStream)+1;
+}
+
+const uint64_t MAX_NUMBER_OF_READABLE_BITS = 64;
+uint64_t readBits(ChunkedBitStream* cbs, uint64_t numberOfBits,int * byteNumber,int * bitNumber, int * currentBitStreamChunk, int * numberOfChunksInBitStream)
+{
+	
+	uint64_t bits = 0;
+	if (*currentBitStreamChunk < *numberOfChunksInBitStream && MAX_NUMBER_OF_READABLE_BITS >= numberOfBits)
+	{
+
+	}
+	return bits;
 }
 
 
@@ -187,6 +220,11 @@ struct PNG loadPNG(const char* filename)
 
 	freeChunk(c);
 	//check when you read end chunk
+
+	struct ChunkedBitStream cbs[MAX_BIT_STREAM_CHUNKS];
+	int currentBitStreamChunk = 0;
+	int numberOfChunksInBitStream = 0;
+
 	while (c.chunkType != FOURCC("IEND"))
 	{
 		c = readChunk(file);
@@ -195,8 +233,8 @@ struct PNG loadPNG(const char* filename)
 		{
 			case FOURCC("IDAT"):
 				{
-					//can do crc check still over chunk here
-					//create linked list and add chunk segments to linked list to create stream
+					AddChunkToBitStream(cbs,c.chunkSegment,c.length,&numberOfChunksInBitStream);
+					c.length = 0;
 				}
 				break;
 			default:
@@ -206,7 +244,7 @@ struct PNG loadPNG(const char* filename)
 		freeChunk(c);
 	}
 
-	//processIDAT(&head, &c);
+	cbs[numberOfChunksInBitStream].length = 0;
 
 
 
@@ -227,6 +265,7 @@ struct LinkedList createLinkedList()
 	l.tail = l.head;
 	l.size = 0;
 	l.head->next = NULL;
+	l.head->prev = NULL;
 	l.head->elem = NULL;
 	return l;
 }
@@ -234,6 +273,7 @@ void addTailLL(struct LinkedList* l, void* elem)
 {
 		l->tail->elem = elem;
 		l->tail->next = (node*)malloc(sizeof(node));
+		l->tail->next->prev = l->tail;
 		l->tail = l->tail->next;
 		l->tail->elem = NULL;
 		l->tail->next = NULL;

@@ -7,6 +7,7 @@ struct node
 {
 	void* elem;
 	node* next;
+	node* prev;
 };
 
 
