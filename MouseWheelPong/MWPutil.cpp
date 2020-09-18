@@ -206,7 +206,7 @@ struct PNG loadPNG(const char* filename)
 		freeChunk(c);
 	}
 
-	processIDAT(&head, &c);
+	//processIDAT(&head, &c);
 
 
 
