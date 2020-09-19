@@ -452,6 +452,60 @@ void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
 	drawLine(window, finLine, color);
 }
 
+void fillPoly(Winfo * window, LinkedList poly, const rgb& color)
+{
+	node* curNode = poly.head;
+	point curPoint;
+	point lowestPoint = curPoint;
+	point highestPoint = curPoint;
+
+	// find highest point
+	for (int i = 0; i < size(&poly); i++)
+	{
+		curPoint = *((point*)curNode->elem);
+		lowestPoint = curPoint.y < lowestPoint.y ? curPoint : lowestPoint;
+		highestPoint = curPoint.y > highestPoint.y ? curPoint : highestPoint;
+		curNode = curNode->next;
+	}
+
+	// Set lists of lines for right and left side.  List is ordered from top to bottom.
+	LinkedList leftSide;
+	LinkedList rightSide;
+	
+	// Make a currentNode for each line list
+	// node curLeft;
+	// node curRight;
+
+	// Set first line from each list
+
+	// line leftLine = *((point*)curLeft->elem);
+	// line rightLine = *((point*)curRight->elem);
+	
+	/*
+	while (true) // loop until highest value point (lowest on screen) reached
+	{
+		if (leftLine.yHi > rightLine.yHi)
+		{
+			for (every y in rightLine)
+			{
+				drawHorizontalLine(window, x0, x1, y);
+			}
+			curRight = curRight.next;
+			rightLine = *((point*)curRight->elem);
+		}
+		else
+		{
+			for (every y in rightLine)
+			{
+				drawHorizontalLine(window, x0, x1, y);
+			}
+			curLeft = curLeft.next;
+			leftLine = *((point*)curLeft->elem);
+		}
+	}
+	*/
+}
+
 void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, const point& center, const rgb& color)
 {
 	double angleIncrements = 2.0* 3.14159265358979323846 / N;
