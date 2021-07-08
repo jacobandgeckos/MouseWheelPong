@@ -452,33 +452,38 @@ void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
 	drawLine(window, finLine, color);
 }
 
+/// Assumes Counterclockwise ordering
 void fillPoly(Winfo * window, LinkedList poly, const rgb& color)
 {
 	node* curNode = poly.head;
-	point curPoint;
-	point lowestPoint = curPoint;
-	point highestPoint = curPoint;
+	node* lowestNode = poly.head;
+	node* highestNode = poly.head;
 
-	// find highest point
+	// find nodes with highest and lowest points
 	for (int i = 0; i < size(&poly); i++)
 	{
-		curPoint = *((point*)curNode->elem);
-		lowestPoint = curPoint.y < lowestPoint.y ? curPoint : lowestPoint;
-		highestPoint = curPoint.y > highestPoint.y ? curPoint : highestPoint;
+		if ( ((point*)curNode->elem)->y < ((point*)lowestNode->elem)->y )
+		{
+			lowestNode = curNode;
+		}
+
+		if ( ((point*)curNode->elem)->y > ((point*)highestNode->elem)->y )
+		{
+			highestNode = curNode;
+		}
+
 		curNode = curNode->next;
 	}
 
-	// Set lists of lines for right and left side.  List is ordered from top to bottom.
-	LinkedList leftSide;
-	LinkedList rightSide;
 	
 	// Make a currentNode for each line list
-	// node curLeft;
-	// node curRight;
+	node* curLeft = highestNode;
+	node* curRight = highestNode;
+
 
 	// Set first line from each list
 
-	// line leftLine = *((point*)curLeft->elem);
+	// line leftLine = line( (point*)curLeft->elem, (point);
 	// line rightLine = *((point*)curRight->elem);
 	
 	/*
