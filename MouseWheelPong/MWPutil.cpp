@@ -160,7 +160,7 @@ void AddChunkToBitStream(ChunkedBitStream* cbs,void*chunk,uint32_t chunkLength, 
 }
 
 const uint64_t MAX_NUMBER_OF_READABLE_BITS = 64;
-uint64_t readBits(ChunkedBitStream* cbs, uint64_t numberOfBits,int * byteNumber,int * bitNumber, int * currentBitStreamChunk, int * numberOfChunksInBitStream)
+uint64_t readBits64(ChunkedBitStream* cbs, uint64_t numberOfBits,int * byteNumber,int * bitNumber, int * currentBitStreamChunk, int * numberOfChunksInBitStream)
 {
 	
 	uint64_t bits = 0;
