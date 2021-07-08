@@ -8,12 +8,16 @@ struct point
 	int32_t x;
 	int32_t y;
 
+	point()
+	{
+		
+	}
+
 	point(int32_t X, int32_t Y)
 	{
 		x = X;
 		y = Y;
 	}
-
 };
 
 // stores info for drawing a line from the Low y point to the High y point
