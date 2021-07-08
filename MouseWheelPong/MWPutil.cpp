@@ -107,36 +107,6 @@ void freeChunk(struct chunk c)
 		free(c.chunkSegment);
 }
 
-void processBitStream(struct PNGheader* header, struct chunk* c)
-{
-	//deflate/inflate compression with a sliding window of at most 32768 bytes
-	if (header->compressionMethod == 0)
-	{
-		uint8_t* chunkPtr = (uint8_t*) c->chunkSegment;
-		uint8_t CMF = *chunkPtr;
-		uint8_t CM = CMF & 0xF; //CM = 8  denotes the "deflate" compression method with a window size up to 32K. CM = 15 is reserved.
-		uint8_t CINFO = CMF >> 4; //For CM = 8, CINFO is the base-2 logarithm of the LZ77 window size, minus eight(CINFO = 7 indicates a 32K window size).
-		++chunkPtr;
-		uint8_t additionalFlags = *chunkPtr;
-		uint8_t FCHECK = additionalFlags & 0x1F;
-		uint8_t FDICT = (additionalFlags >> 5) & 0x1; //check if preset dictionary
-		uint8_t FLEVEL = additionalFlags >> 6; //compression level
-		++chunkPtr;
-		
-		uint16_t checksum = ((uint16_t)CMF)*256 + ((uint16_t)additionalFlags) % 31;
-		const wchar_t* str = (checksum ? L"FCHECK BAD!" : L"FCHECK set right");
-
-		OutputDebugString((std::to_wstring(CM) +L" "+ std::to_wstring(CINFO) + L" " + std::to_wstring(additionalFlags) + L" " + str + L"\n").c_str());
-		//test for BFINAL bit
-		if((*chunkPtr & (0x1 << 7)) == 0) //change to while loop
-		{
-			//(*chunkPtr & (0x3 << 6))>>6
-			OutputDebugString((std::to_wstring((*chunkPtr & (0x3 << 6)) >> 6)+ L"\n").c_str());
-			++chunkPtr;
-
-		}
-	}
-}
 
 const uint64_t MAX_BIT_STREAM_CHUNKS = 100;
 struct ChunkedBitStream
@@ -152,12 +122,46 @@ struct ChunkedBitStream
 	int numberOfChunksInBitStream = 0;
 */
 
-void AddChunkToBitStream(ChunkedBitStream* cbs,void*chunk,uint32_t chunkLength, int* numberOfChunksInBitStream)
+int AddChunkToBitStream(ChunkedBitStream* cbs,void*chunk, uint32_t chunkLength, int numChunksInBitStream)
 {
-	cbs[*numberOfChunksInBitStream].bitStreamChunk = chunk;
-	cbs[*numberOfChunksInBitStream].length = chunkLength;
-	(*numberOfChunksInBitStream) = (*numberOfChunksInBitStream)+1;
+	cbs[numChunksInBitStream].bitStreamChunk = chunk;
+	cbs[numChunksInBitStream].length = chunkLength;
+	return numChunksInBitStream + 1;
 }
+
+void processBitStream(struct PNGheader* header, struct PNG* p, ChunkedBitStream* cbs)
+{
+	//deflate/inflate compression with a sliding window of at most 32768 bytes
+	int currChunk = 0;
+	if (header->compressionMethod == 0) //remember only IHDR compression method 0 is defined
+	{
+		uint8_t* chunkPtr = (uint8_t*)cbs[currChunk].bitStreamChunk;
+		uint8_t CMF = *chunkPtr;
+		uint8_t CM = CMF & 0xF; //CM = 8  denotes the "deflate" compression method with a window size up to 32K. CM = 15 is reserved.
+		uint8_t CINFO = CMF >> 4; //For CM = 8, CINFO is the base-2 logarithm of the LZ77 window size, minus eight(CINFO = 7 indicates a 32K window size).
+		++chunkPtr;
+		uint8_t additionalFlags = *chunkPtr;
+		uint8_t FCHECK = additionalFlags & 0x1F;
+		uint8_t FDICT = (additionalFlags >> 5) & 0x1; //check if preset dictionary
+		uint8_t FLEVEL = additionalFlags >> 6; //compression level
+		++chunkPtr;
+
+		
+
+		uint16_t checksum = (((uint16_t)CMF) * 256 + ((uint16_t)additionalFlags)) % 31;
+		const wchar_t* str = (checksum ? L"FCHECK BAD!" : L"FCHECK set right");
+
+		OutputDebugString((L"CM: "+std::to_wstring(CM) + L" CINFO: " + std::to_wstring(CINFO) + L" FDICT: " + std::to_wstring(FDICT) + L" FLEVEL: " + std::to_wstring(FLEVEL) + L" " + str + L"\n").c_str());
+		//test for BFINAL bit
+		if ((*chunkPtr & (0x1 << 7)) != 0) //change to while loop == 0
+		{
+			OutputDebugString((std::to_wstring(*chunkPtr) + L" " + std::to_wstring((*chunkPtr & (0x3 << 5)) >> 5) + L"\n").c_str());
+			++chunkPtr;
+
+		}
+	}
+}
+
 
 const uint64_t MAX_NUMBER_OF_READABLE_BITS = 64;
 uint64_t readBits64(ChunkedBitStream* cbs, uint64_t numberOfBits,int * byteNumber,int * bitNumber, int * currentBitStreamChunk, int * numberOfChunksInBitStream)
@@ -233,8 +237,8 @@ struct PNG loadPNG(const char* filename)
 		{
 			case FOURCC("IDAT"):
 				{
-					AddChunkToBitStream(cbs,c.chunkSegment,c.length,&numberOfChunksInBitStream);
-					c.length = 0;
+				    numberOfChunksInBitStream = AddChunkToBitStream(cbs,c.chunkSegment,c.length,numberOfChunksInBitStream);
+					c.length = 0; //stops deallocation of chunk
 				}
 				break;
 			default:
@@ -244,7 +248,8 @@ struct PNG loadPNG(const char* filename)
 		freeChunk(c);
 	}
 
-	cbs[numberOfChunksInBitStream].length = 0;
+	//use numberOfChunksInBitStream
+	processBitStream(&head,&p,cbs);
 
 
 
