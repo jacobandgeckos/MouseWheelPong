@@ -5,7 +5,7 @@
 
 #pragma region Pixel
 
-inline void setPixel(uint32_t *pixel, const rgb & color)
+inline void setPixel(uint32_t* pixel, const rgb& color)
 {
 	// draws to an individual pixel
 	// by looping through an amount of memory equal to the number of rows * columns
@@ -17,10 +17,10 @@ inline void setPixel(uint32_t *pixel, const rgb & color)
 			 0x xxRRGGBB
 	*/
 
-	*pixel = ((color.red << 16) | (color.green << 8) | color.blue);
+	* pixel = ((color.red << 16) | (color.green << 8) | color.blue);
 }
 
-void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color)
+void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb& color)
 {
 	if (x < window->winWidth && y < window->winHeight)
 	{
@@ -34,13 +34,13 @@ void setPixelXY(Winfo* window, uint32_t x, uint32_t y, const rgb & color)
 
 #pragma region Background
 
-void background(Winfo* window, const rgb & color)
+void background(Winfo* window, const rgb& color)
 {
 	//Draws to every pixel in memory, filling in the whole memory
 	uint32_t* Pixel = (uint32_t*)window->winPixMemory;
 	int pixels = window->winHeight * window->winWidth;
 
-	for(int count = 0; count < pixels; ++count)
+	for (int count = 0; count < pixels; ++count)
 	{
 		setPixel(Pixel, color);
 		++Pixel;
@@ -53,7 +53,7 @@ void randomBackground(Winfo* window)
 	uint32_t* Pixel = (uint32_t*)window->winPixMemory;
 	int pixels = window->winHeight * window->winWidth;
 
-	for(int count = 0; count < pixels; ++count)
+	for (int count = 0; count < pixels; ++count)
 	{
 		setPixel(Pixel, rgb((unsigned char)MWPrand() * 255, (unsigned char)MWPrand() * 255, (unsigned char)MWPrand() * 255));
 		++Pixel;
@@ -65,7 +65,7 @@ void randomBackground(Winfo* window)
 
 #pragma region Lines
 
-void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, const rgb & color)
+void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, const rgb& color)
 {
 	if (y < window->winHeight)
 	{
@@ -96,13 +96,13 @@ void drawHorizontalLine(Winfo* window, uint32_t x0, uint32_t x1, uint32_t y, con
 	}
 }
 
-void drawVerticalLine(Winfo* window, uint32_t x, uint32_t y0, uint32_t y1, const rgb &color)
+void drawVerticalLine(Winfo* window, uint32_t x, uint32_t y0, uint32_t y1, const rgb& color)
 {
 	int index;
 	int endY;
 	uint32_t* Pixel = ((uint32_t*)window->winPixMemory) + x;
 
-	if(y0 < y1)
+	if (y0 < y1)
 	{
 		Pixel += y0 * window->winWidth;
 		index = y0;
@@ -114,17 +114,17 @@ void drawVerticalLine(Winfo* window, uint32_t x, uint32_t y0, uint32_t y1, const
 		index = y1;
 		endY = y0;
 	}
-	for(; index <= endY; ++index)
+	for (; index <= endY; ++index)
 	{
 		setPixel(Pixel, color);
 		Pixel += window->winWidth;
 	}
 }
 
-void bLineNext(line & ln)
+void bLineNext(line& ln)
 {
 	// Reverse (y, x) Low Slope Line
-	if(ln.lowSlope)
+	if (ln.lowSlope)
 	{
 		if (ln.decideVar > 0)
 		{
@@ -164,21 +164,21 @@ void drawLine(Winfo* window, line& ln, const rgb& color)
 
 #pragma region Rectangles
 
-void drawRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb & color)
+void drawRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb& color)
 {
-	drawHorizontalLine(window, x, x+width, y, color);
-	drawVerticalLine(window, y, y+height, x+width, color);
+	drawHorizontalLine(window, x, x + width, y, color);
+	drawVerticalLine(window, y, y + height, x + width, color);
 	drawHorizontalLine(window, x, x + width, y + height, color);
 	drawVerticalLine(window, y, y + height, x, color);
 }
 
-void rasterizeRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb & color)
+void rasterizeRectangle(Winfo* window, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const rgb& color)
 {
 	uint32_t* Pixel = ((uint32_t*)window->winPixMemory) + y * window->winWidth + x;
 
-	for(uint32_t yindex = 0; yindex < height; ++yindex)
+	for (uint32_t yindex = 0; yindex < height; ++yindex)
 	{
-		for(uint32_t xindex = 0; xindex < width; ++xindex)
+		for (uint32_t xindex = 0; xindex < width; ++xindex)
 		{
 			setPixel(Pixel, color);
 			++Pixel;
@@ -300,9 +300,9 @@ void fillTriangle(Winfo* window, const point& p1, const point& p2, const point& 
 	setPixelXY(window, vHi->x, vHi->y, color);
 }
 
-void drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
+void drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb& color)
 {
-	line curLine(x0, y0, x1, y1);	
+	line curLine(x0, y0, x1, y1);
 	drawLine(window, curLine, color);
 	curLine = line(x1, y1, x2, y2);
 	drawLine(window, curLine, color);
@@ -310,7 +310,7 @@ void drawTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t
 	drawLine(window, curLine, color);
 }
 
-static void fillBottomFlatTriangle(Winfo* window, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
+static void fillBottomFlatTriangle(Winfo* window, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb& color)
 {
 	/*
 	//float invslope1 = ((float)(x1-x0))/((float)(y1-y0));  // Division and floats?
@@ -349,7 +349,7 @@ static void fillBottomFlatTriangle(Winfo* window, uint32_t y0, uint32_t x1, uint
 	*/
 }
 
-void rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb & color)
+void rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const rgb& color)
 {
 
 }
@@ -359,53 +359,53 @@ void rasterizeTriangle(Winfo* window, uint32_t x0, uint32_t y0, uint32_t x1, uin
 
 #pragma region Circle
 
-void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color)
+void drawCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb& color)
 {
-	uint32_t x0 = 0; 
+	uint32_t x0 = 0;
 	uint32_t y0 = r;
-	int32_t d = 3 - 2*r;
-	setPixelXY(window, x, y+r, color);
-	setPixelXY(window, x+r, y, color);
-	setPixelXY(window, x, y-r, color);
-	setPixelXY(window, x-r, y, color);
-	while(x0 <= y0)
+	int32_t d = 3 - 2 * r;
+	setPixelXY(window, x, y + r, color);
+	setPixelXY(window, x + r, y, color);
+	setPixelXY(window, x, y - r, color);
+	setPixelXY(window, x - r, y, color);
+	while (x0 <= y0)
 	{
-		if(d > 0)
+		if (d > 0)
 		{
-			d += 4*(x0-y0) + 10;
+			d += 4 * (x0 - y0) + 10;
 			--y0;
 		}
 		else
 		{
-			d += 4*x0 + 6;
+			d += 4 * x0 + 6;
 		}
 		++x0;
-		setPixelXY(window, x+x0, y+y0, color);
-		setPixelXY(window, x+y0, y+x0, color);
-		setPixelXY(window, x+x0, y-y0, color);
-		setPixelXY(window, x+y0, y-x0, color);
-		setPixelXY(window, x-x0, y+y0, color);
-		setPixelXY(window, x-y0, y+x0, color);
-		setPixelXY(window, x-x0, y-y0, color);
-		setPixelXY(window, x-y0, y-x0, color);
+		setPixelXY(window, x + x0, y + y0, color);
+		setPixelXY(window, x + y0, y + x0, color);
+		setPixelXY(window, x + x0, y - y0, color);
+		setPixelXY(window, x + y0, y - x0, color);
+		setPixelXY(window, x - x0, y + y0, color);
+		setPixelXY(window, x - y0, y + x0, color);
+		setPixelXY(window, x - x0, y - y0, color);
+		setPixelXY(window, x - y0, y - x0, color);
 	}
 }
 
-void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb & color)
+void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rgb& color)
 {
-	uint32_t x0 = 0; 
+	uint32_t x0 = 0;
 	uint32_t y0 = r;
-	int32_t d = 3 - 2*r;
-	while(x0 <= y0)
+	int32_t d = 3 - 2 * r;
+	while (x0 <= y0)
 	{
-		if(d > 0)
+		if (d > 0)
 		{
 			// I ruined this by moving x in front of y, because why would y ever go first?
-			drawHorizontalLine(window, x+x0, x-x0, y+y0, color);
-			drawVerticalLine(window, y-x0, y+x0, x+y0, color);
-			drawHorizontalLine(window, x+x0, x-x0, y-y0, color);
-			drawVerticalLine(window, y-x0, y+x0, x-y0, color);
-			d += 4*(x0-y0) + 10;
+			drawHorizontalLine(window, x + x0, x - x0, y + y0, color);
+			drawVerticalLine(window, y - x0, y + x0, x + y0, color);
+			drawHorizontalLine(window, x + x0, x - x0, y - y0, color);
+			drawVerticalLine(window, y - x0, y + x0, x - y0, color);
+			d += 4 * (x0 - y0) + 10;
 			--y0;
 		}
 		else
@@ -414,7 +414,7 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 		}
 		++x0;
 	}
-	rasterizeRectangle(window, x-x0, y-y0, 2*x0, 2*x0, color);	
+	rasterizeRectangle(window, x - x0, y - y0, 2 * x0, 2 * x0, color);
 }
 
 #pragma endregion
@@ -422,7 +422,7 @@ void rasterizeCircle(Winfo* window, uint32_t x, uint32_t y, uint32_t r, const rg
 
 #pragma region Polygons
 
-void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
+void drawPoly(Winfo* window, LinkedList poly, const rgb& color)
 {
 	node* curNode = poly.head;
 	point vert1(0, 0);
@@ -452,64 +452,118 @@ void drawPoly(Winfo * window, LinkedList poly, const rgb & color)
 	drawLine(window, finLine, color);
 }
 
-void fillPoly(Winfo * window, LinkedList poly, const rgb& color)
+/// Assumes Counterclockwise ordering
+void fillPoly(Winfo* window, LinkedList poly, const rgb& color)
 {
 	node* curNode = poly.head;
-	point curPoint;
-	point lowestPoint = curPoint;
-	point highestPoint = curPoint;
+	node* lowestNode = poly.head;
+	node* highestNode = poly.head;
 
-	// find highest point
+	// find nodes with highest and lowest points
 	for (int i = 0; i < size(&poly); i++)
 	{
-		curPoint = *((point*)curNode->elem);
-		lowestPoint = curPoint.y < lowestPoint.y ? curPoint : lowestPoint;
-		highestPoint = curPoint.y > highestPoint.y ? curPoint : highestPoint;
+		if (((point*)curNode->elem)->y < ((point*)lowestNode->elem)->y)
+		{
+			lowestNode = curNode;
+		}
+
+		if (((point*)curNode->elem)->y > ((point*)highestNode->elem)->y)
+		{
+			highestNode = curNode;
+		}
+
 		curNode = curNode->next;
 	}
 
-	// Set lists of lines for right and left side.  List is ordered from top to bottom.
-	LinkedList leftSide;
-	LinkedList rightSide;
-	
+
 	// Make a currentNode for each line list
-	// node curLeft;
-	// node curRight;
+	node* curLeft = lowestNode;
+	node* curRight = lowestNode;
+
 
 	// Set first line from each list
 
-	// line leftLine = *((point*)curLeft->elem);
-	// line rightLine = *((point*)curRight->elem);
-	
-	/*
-	while (true) // loop until highest value point (lowest on screen) reached
+	line leftLine = line(*(point*)curLeft->elem, *(point*)curLeft->next->elem);
+	line rightLine = line(*(point*)curRight->elem, *(point*)curRight->prev->elem);
+
+	bool fillFinished = false;
+
+	int yLevel = ((point*)lowestNode->elem)->y;
+
+	do // loop until highest value point (lowest on screen) reached
 	{
+		// If rightLine ends first
 		if (leftLine.yHi > rightLine.yHi)
 		{
-			for (every y in rightLine)
+			// Loop through every y in rightLine
+			while (rightLine.curY < rightLine.yHi)
 			{
-				drawHorizontalLine(window, x0, x1, y);
+				yLevel = rightLine.curY;
+				// Draw a line between the current points which should be on the same y.
+				drawHorizontalLine(window, leftLine.curX, rightLine.curX, yLevel, color);
+
+				// do bLineNext on each line to advance the current point
+				while (leftLine.curY == yLevel)
+				{
+					bLineNext(leftLine);
+				}
+				while (rightLine.curY == yLevel)
+				{
+					bLineNext(rightLine);
+				}
 			}
-			curRight = curRight.next;
-			rightLine = *((point*)curRight->elem);
+
+			if (leftLine.yHi == ((point*)highestNode->elem)->y && rightLine.yHi == ((point*)highestNode->elem)->y)
+			{
+				fillFinished = true;
+			}
+			// go to the next rightLine (but we will still use the currentpoint in the middle of the current leftLine)
+
+			// advance the points
+			// set rightLine
+			curRight = curRight->prev;
+			rightLine = line(*(point*)curRight->elem, *(point*)curRight->prev->elem);
 		}
+
+		// If leftLine ends first
 		else
 		{
-			for (every y in rightLine)
+			// Loop through every y in rightLine
+			while (leftLine.curY < leftLine.yHi)
 			{
-				drawHorizontalLine(window, x0, x1, y);
+				yLevel = rightLine.curY;
+				// Draw a line between the current points which should be on the same y.
+				drawHorizontalLine(window, leftLine.curX, rightLine.curX, yLevel, color);
+
+				// do bLineNext on each line to advance the current point
+				while (leftLine.curY == yLevel)
+				{
+					bLineNext(leftLine);
+				}
+				while (rightLine.curY == yLevel)
+				{
+					bLineNext(rightLine);
+				}
 			}
-			curLeft = curLeft.next;
-			leftLine = *((point*)curLeft->elem);
+
+			if (leftLine.yHi == ((point*)highestNode->elem)->y && rightLine.yHi == ((point*)highestNode->elem)->y)
+			{
+				fillFinished = true;
+			}
+			// go to the next LeftLine (but we will still use the currentpoint in the middle of the current leftLine)
+			// advance the points
+			// set rightLine
+			curLeft = curLeft->next;
+			leftLine = line(*(point*)curLeft->elem, *(point*)curLeft->next->elem);
 		}
-	}
-	*/
+	} while (!fillFinished);
+
 }
 
 void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, const point& center, const rgb& color)
 {
-	double angleIncrements = 2.0* 3.14159265358979323846 / N;
-	int currX = center.x+radius*cos(angleOffset); int currY = center.y+radius*sin(angleOffset);
+	double angleIncrements = 2.0 * 3.14159265358979323846 / N;
+	int currX = center.x + radius * cos(angleOffset); int currY = center.y + radius * sin(angleOffset);
 	int prevX; int prevY;
 	int firstX = currX;
 	int secondX = currY;
@@ -517,8 +571,8 @@ void drawNGon(Winfo* window, const int N, const int radius, double angleOffset, 
 	{
 		prevX = currX;
 		prevY = currY;
-		currX = center.x + radius * cos(i* angleIncrements + angleOffset);
-		currY = center.y + radius * sin(i* angleIncrements + angleOffset);
+		currX = center.x + radius * cos(i * angleIncrements + angleOffset);
+		currY = center.y + radius * sin(i * angleIncrements + angleOffset);
 		line l(prevX, prevY, currX, currY);
 		drawLine(window, l, color);
 	}
@@ -530,11 +584,11 @@ LinkedList shClipToScreen(Winfo* window, LinkedList in_poly)
 {
 	LinkedList out_poly = createLinkedList();
 
-	node * curNode = in_poly.head;
+	node* curNode = in_poly.head;
 	point vert1(0, 0);
 	point vert2(0, 0);
 
-	for (int i = 0; i < size(&in_poly)-1; i++)
+	for (int i = 0; i < size(&in_poly) - 1; i++)
 	{
 		vert1 = *((point*)curNode->elem);
 		curNode = curNode->next;
@@ -555,8 +609,8 @@ LinkedList shClipToScreen(Winfo* window, LinkedList in_poly)
 				bool intFound = false;
 
 				intFound = yIntersection(0, intLine, intPoint);
-				
-				if(!intFound)
+
+				if (!intFound)
 				{
 					intFound = xIntersection(0, intLine, intPoint);
 				}
@@ -675,7 +729,7 @@ LinkedList shClipToScreen(Winfo* window, LinkedList in_poly)
 	return out_poly;
 }
 
-bool yIntersection(int32_t yInt, line ln, point & intPoint)
+bool yIntersection(int32_t yInt, line ln, point& intPoint)
 {
 	ln.startLine();
 	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
@@ -691,7 +745,7 @@ bool yIntersection(int32_t yInt, line ln, point & intPoint)
 	return false;
 }
 
-bool xIntersection(int32_t xInt, line ln, point & intPoint)
+bool xIntersection(int32_t xInt, line ln, point& intPoint)
 {
 	ln.startLine();
 	while ((ln.curY != ln.yHi) || (ln.curX != ln.xHi))
@@ -712,27 +766,27 @@ bool xIntersection(int32_t xInt, line ln, point & intPoint)
 
 #pragma region Special
 
-void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb & color)
+void drawSpreadVerticalLines(Winfo* window, int numberOfLines, const rgb& color)
 {
 	if (numberOfLines < 1)
 		return;
-	int spread = window->winWidth / (numberOfLines+1);
-	for(int i  = 0; i < numberOfLines; ++i)
+	int spread = window->winWidth / (numberOfLines + 1);
+	for (int i = 0; i < numberOfLines; ++i)
 	{
-		drawVerticalLine(window, (i + 1)*spread, 0,  window->winHeight-1 ,color);
+		drawVerticalLine(window, (i + 1) * spread, 0, window->winHeight - 1, color);
 	}
 }
 
-void drawPaddlesRegistrationScreen(Winfo* window,Player * players, int numberOfPlayers, const rgb & color)
+void drawPaddlesRegistrationScreen(Winfo* window, Player* players, int numberOfPlayers, const rgb& color)
 {
 	if (numberOfPlayers < 1)
 		return;
-	int positionWidth = window->winWidth/numberOfPlayers;
-	int halfPositionWidth = positionWidth/2;
+	int positionWidth = window->winWidth / numberOfPlayers;
+	int halfPositionWidth = positionWidth / 2;
 
-	for(int i = 0; i < numberOfPlayers; ++i)
+	for (int i = 0; i < numberOfPlayers; ++i)
 	{
-		rasterizeRectangle(window, positionWidth*i + halfPositionWidth, (window->winHeight / 2) + players[i].position, 5, 15, color);
+		rasterizeRectangle(window, positionWidth * i + halfPositionWidth, (window->winHeight / 2) + players[i].position, 5, 15, color);
 	}
 
 }

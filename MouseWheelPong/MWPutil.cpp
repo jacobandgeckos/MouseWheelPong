@@ -602,32 +602,46 @@ void freePNG(struct PNG p)
 struct LinkedList createLinkedList()
 {
 	struct LinkedList l;
-	l.head = (node*)malloc(sizeof(node));
-	l.tail = l.head;
+	l.head = NULL;
+	l.tail = NULL;
 	l.size = 0;
-	l.head->next = NULL;
-	l.head->prev = NULL;
-	l.head->elem = NULL;
 	return l;
 }
+
 void addTailLL(struct LinkedList* l, void* elem)
 {
-		l->tail->elem = elem;
-		l->tail->next = (node*)malloc(sizeof(node));
-		l->tail->next->prev = l->tail;
-		l->tail = l->tail->next;
-		l->tail->elem = NULL;
-		l->tail->next = NULL;
-		++l->size;
+	// store the current tail temporarily
+	if (l->tail == NULL)
+	{
+		l->head = (node*)malloc(sizeof(node));
+		l->tail = l->head;
+		l->tail->next = l->tail;
+		l->tail->prev = l->tail;
+	}
+	else
+	{
+		node* tempTail = l->tail;
+
+		// init new tail
+		l->tail = (node*)malloc(sizeof(node));
+		l->tail->prev = tempTail;
+		l->tail->next = l->head;
+		tempTail->next = l->tail;
+		l->head->prev = l->tail;
+	}
+	l->tail->elem = elem;
+	++l->size;
 }
 uint32_t size(struct LinkedList* l)
 {
 	return l->size;
 }
 
-void deleteLL(struct LinkedList* l,void (*cleanup)(void*ptr))
+void deleteLL(struct LinkedList* l, void (*cleanup)(void* ptr))
 {
-	for(struct node* it = l->head; it != l->tail;)
+	if (l->head == NULL) return;
+	struct node* it = l->head->next;
+	while (it != l->head)
 	{
 		if (cleanup != NULL)
 		{
@@ -637,5 +651,9 @@ void deleteLL(struct LinkedList* l,void (*cleanup)(void*ptr))
 		it = it->next;
 		free(tmp);
 	}
-	free(l->tail);
+	if (cleanup != NULL)
+	{
+		cleanup(l->head->elem);
+	}
+	free(l->head);
 }

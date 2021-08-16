@@ -34,6 +34,22 @@ void Game(KeyPresses * key)
 
 	drawPoly(&globalWindow, poly2, rgb(0, 255, 255));
 
+
+	LinkedList poly3 = createLinkedList();
+	addTailLL(&poly3, new point(100, 20));
+	addTailLL(&poly3, new point(50, 30));
+	addTailLL(&poly3, new point(70, 70));
+	addTailLL(&poly3, new point(40, 90));
+	addTailLL(&poly3, new point(110, 120));
+	addTailLL(&poly3, new point(130, 80));
+	addTailLL(&poly3, new point(120, 50));
+
+	rgb p3color(0, 0, 0);
+	fillPoly(&globalWindow, poly3, p3color);
+	drawPoly(&globalWindow, poly3, rgb(0, 255, 255));
+
+
+
 	fillTriangle(&globalWindow, point(125, 200), point(580, 120), point(230, 568), rgb(0, 0, 0));
 	if (blinkOn)
 	{
