@@ -60,6 +60,8 @@ int CALLBACK WinMain(
 
 	struct PNG p = loadPNG("test.png");
 
+	struct PNG p2 = loadPNG("test2.png");
+
 
 	// Make an actual window ?
 	// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw
