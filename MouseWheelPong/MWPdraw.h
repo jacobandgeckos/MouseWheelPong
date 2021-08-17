@@ -136,3 +136,5 @@ bool yIntersection(int32_t yInt, line ln, point& intPoint);
 LinkedList shClipToScreen(Winfo* window, LinkedList in_poly);
 void drawPoly(Winfo* window, LinkedList poly, const rgb& color);
 void fillPoly(Winfo* window, LinkedList poly, const rgb& color);
+
+void drawPNG(Winfo* window, const point & topLeft, const PNG & p);

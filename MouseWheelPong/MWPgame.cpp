@@ -6,6 +6,9 @@ extern gameInfo GlobalGameInfo;
 extern int globalWinWidth;
 extern int globalWinHeight;
 
+extern struct PNG p;
+extern struct PNG p2;
+
 // Animation Track
 line ani1(0, 0, 800, 600);
 line ani2(0, 100, 800, 400);
@@ -15,6 +18,8 @@ bool blinkOn = false;
 
 void Game(KeyPresses * key)
 {
+
+
 	static int everyCertainFrame = 0;
 	static int everyCertainFrameCount = 10;
 
@@ -23,6 +28,8 @@ void Game(KeyPresses * key)
 
 	rgb BackgroundColor(255, 0, 0);
 	background(&globalWindow, BackgroundColor);
+
+	drawPNG(&globalWindow, point(0, 0), p);
 
 	LinkedList poly1 = createLinkedList();
 	addTailLL(&poly1, new point(40, -5));

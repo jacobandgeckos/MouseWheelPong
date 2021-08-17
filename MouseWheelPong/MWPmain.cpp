@@ -29,6 +29,9 @@ int globalWinHeight = 600;
 
 bool running = true;
 
+struct PNG p;
+struct PNG p2;
+
 int CALLBACK WinMain(
 	HINSTANCE ProgramInstance,
 	HINSTANCE ParentProgramInstance,
@@ -57,11 +60,8 @@ int CALLBACK WinMain(
 	initializeMiceToRawInput();
 	initGameInfo(&GlobalGameInfo);
 	initRegistrationAttributes(&regScreen);
-
-	struct PNG p = loadPNG("test.png");
-
-	struct PNG p2 = loadPNG("test2.png");
-
+	p = loadPNG("test.png");
+	p2 = loadPNG("test2.png");
 
 	// Make an actual window ?
 	// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw

@@ -133,7 +133,7 @@ int AddChunkToBitStream(ChunkedBitStream* cbs,void*chunk, uint32_t chunkLength, 
 
 
 //change to reading cbs by reference if going to need to modify it, but probably don't need to
-inline uint8_t ReadAtMost8BitsFromBitStream(uint8_t readAmt, size_t & amountInChunk, size_t & amountInByte, int & currChunk, uint8_t* & chunkPtr, ChunkedBitStream* cbs)
+inline uint8_t ReadAtMost8BitsFromBitStream(uint8_t readAmt, size_t & amountInChunk, size_t & amountInByte, int & currChunk, uint8_t* & chunkPtr, ChunkedBitStream* cbs, uint8_t numDataChunks)
 {
 	uint8_t shiftAmt = 8 - amountInByte;
 	if (readAmt > amountInByte)
@@ -147,8 +147,16 @@ inline uint8_t ReadAtMost8BitsFromBitStream(uint8_t readAmt, size_t & amountInCh
 		{
 			//get next data chunk
 			++currChunk;
-			amountInChunk = cbs[currChunk].length;
-			chunkPtr = (uint8_t*)cbs[currChunk].bitStreamChunk;
+			if (currChunk == numDataChunks)
+			{
+				amountInChunk = 0;
+				chunkPtr = NULL;
+			}
+			else
+			{
+				amountInChunk = cbs[currChunk].length;
+				chunkPtr = (uint8_t*)cbs[currChunk].bitStreamChunk;
+			}
 		}
 		else
 		{
@@ -165,35 +173,41 @@ inline uint8_t ReadAtMost8BitsFromBitStream(uint8_t readAmt, size_t & amountInCh
 }
 
 //if in network order, maybe just correct the byte order in here?
-inline uint16_t ReadAtMost16BitsFromBitStream(uint8_t readAmt, size_t& amountInChunk, size_t& amountInByte, int& currChunk, uint8_t*& chunkPtr, ChunkedBitStream* cbs)
+inline uint16_t ReadAtMost16BitsFromBitStream(uint8_t readAmt, size_t& amountInChunk, size_t& amountInByte, int& currChunk, uint8_t*& chunkPtr, ChunkedBitStream* cbs, uint8_t numDataChunks)
 {
 	uint16_t val = 0;
+	uint8_t initReadAmt = readAmt;
 	while (readAmt > amountInByte)
 	{
 		uint8_t shiftAmt = 8 - amountInByte;
 		//assuming not more than 8 bits requested
-		val = (*chunkPtr & (0xFF << shiftAmt)) >> shiftAmt;
+		val |= ((uint16_t)((*chunkPtr & (0xFF << shiftAmt)) >> shiftAmt)) << initReadAmt-readAmt;
 		readAmt = readAmt - amountInByte;
-
-		int16_t amt = 8 - ((int16_t)readAmt);
-		amountInByte = amt < 0? 0:amt;
+		amountInByte = 8;
 		--amountInChunk;
 		if (amountInChunk <= 0) //maybe ok to be 0? but not negative!
 		{
 				//get next data chunk
 			++currChunk;
-			amountInChunk = cbs[currChunk].length;
-			chunkPtr = (uint8_t*)cbs[currChunk].bitStreamChunk;
+			if (currChunk == numDataChunks)
+			{
+				amountInChunk = 0;
+				chunkPtr = NULL;
+			}
+			else
+			{
+				amountInChunk = cbs[currChunk].length;
+				chunkPtr = (uint8_t*)cbs[currChunk].bitStreamChunk;
+			}
 		}
 		else
 		{
 			++chunkPtr; //make sure not out of chunk
 		}
-		val = ((*chunkPtr & (0xFF >> amountInByte)) << (8 - shiftAmt)) + val;
 	}
 	if(readAmt > 0)
 	{
-		return (val << readAmt) + ReadAtMost8BitsFromBitStream(readAmt, amountInChunk, amountInByte, currChunk, chunkPtr, cbs);
+		return val+(ReadAtMost8BitsFromBitStream(readAmt, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks)<<(initReadAmt -readAmt));
 	}
 	return val;
 }
@@ -250,10 +264,11 @@ int16_t DecodeWithHuffmanFromBitStream(int16_t * tablesym, int16_t * tablecnt, i
 
 #include <bitset>
 
-void processBitStream(struct PNGheader* header, struct PNG* p, ChunkedBitStream* cbs)
+void processBitStream(struct PNGheader* header, struct PNG* p, ChunkedBitStream* cbs, uint8_t numDataChunks)
 {
 	//deflate/inflate compression with a sliding window of at most 32768 bytes
 	int currChunk = 0;
+	uint64_t currByteInImage = 0;
 	if (header->compressionMethod == 0) //remember only IHDR compression method 0 is defined
 	{
 		uint8_t* chunkPtr = (uint8_t*)cbs[currChunk].bitStreamChunk;
@@ -298,16 +313,16 @@ void processBitStream(struct PNGheader* header, struct PNG* p, ChunkedBitStream*
 				case 2: //Dynamic Huffman
 				{
 					//maybe amount in chunk, amount in byte, curr chnunk, chunk ptr, and cbs could all have been wrapped in a struct
-					uint16_t HLIT = ((uint16_t)ReadAtMost8BitsFromBitStream(5, amountInChunk, amountInByte, currChunk, chunkPtr, cbs)) + 257; //length of length table
-					uint8_t HDIST = ReadAtMost8BitsFromBitStream(5, amountInChunk, amountInByte, currChunk, chunkPtr, cbs) + 1; //length of distance table
-					uint8_t HCLEN = ReadAtMost8BitsFromBitStream(4, amountInChunk, amountInByte, currChunk, chunkPtr, cbs) + 4; //length of table to decompress length and distance table
+					uint16_t HLIT = ((uint16_t)ReadAtMost8BitsFromBitStream(5, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks)) + 257; //length of length table
+					uint8_t HDIST = ReadAtMost8BitsFromBitStream(5, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks) + 1; //length of distance table
+					uint8_t HCLEN = ReadAtMost8BitsFromBitStream(4, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks) + 4; //length of table to decompress length and distance table
 					static const uint8_t order[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 }; //from spec
 					int16_t lengths[MAXCODES];
 
 					//there is now HCLEN 3-bit code lengths in the bit stream of the decompression table to decompress the 
 					//  length and distance table for data. Read them in. They are stored based on the order array from the spec
 					for (int i = 0; i < HCLEN; ++i)
-						lengths[order[i]] = ReadAtMost8BitsFromBitStream(3, amountInChunk, amountInByte, currChunk, chunkPtr, cbs);
+						lengths[order[i]] = ReadAtMost8BitsFromBitStream(3, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks);
 					for (int i = HCLEN; i < 19; ++i)
 						lengths[order[i]] = 0;
 
@@ -348,21 +363,21 @@ void processBitStream(struct PNGheader* header, struct PNG* p, ChunkedBitStream*
 						} break;
 						case 16: //RLE decoded symbol
 						{
-							uint8_t repeatAmt = ReadAtMost8BitsFromBitStream(2, amountInChunk, amountInByte, currChunk, chunkPtr, cbs) + 3;
+							uint8_t repeatAmt = ReadAtMost8BitsFromBitStream(2, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks) + 3;
 							for (int cpy = 0; cpy < repeatAmt; ++cpy)
 								lengths[i + cpy] = lengths[i - 1];
 							i += repeatAmt;
 						} break;
 						case 17: //RLE decoded symbol
 						{
-							uint8_t repeatAmt = ReadAtMost8BitsFromBitStream(3, amountInChunk, amountInByte, currChunk, chunkPtr, cbs) + 3;
+							uint8_t repeatAmt = ReadAtMost8BitsFromBitStream(3, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks) + 3;
 							for (int cpy = 0; cpy < repeatAmt; ++cpy)
 								lengths[i + cpy] = 0;
 							i += repeatAmt;
 						} break;
 						case 18: //RLE decoded symbol
 						{
-							uint8_t repeatAmt = ReadAtMost8BitsFromBitStream(7, amountInChunk, amountInByte, currChunk, chunkPtr, cbs) + 11;
+							uint8_t repeatAmt = ReadAtMost8BitsFromBitStream(7, amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks) + 11;
 							for (int cpy = 0; cpy < repeatAmt; ++cpy)
 								lengths[i + cpy] = 0;
 							i += repeatAmt;
@@ -437,16 +452,24 @@ void processBitStream(struct PNGheader* header, struct PNG* p, ChunkedBitStream*
 						if(unfilteredSymbol < 256)
 						{
 							//output symbol here since it is a literal
+							p->data[currByteInImage] = unfilteredSymbol;
+							++currByteInImage;
 						}
 						else if(unfilteredSymbol > 256) //values 257..285 represent length codes (possibly in conjunction with extra bits following the symbol code)
 						{
 							//unfilteredSymbol represents the index to the lens and ExtraLengthBits table to reconstruct the length
 							unfilteredSymbol -= 257;
-							int16_t length = lens[unfilteredSymbol] + ReadAtMost8BitsFromBitStream(ExtraLengthBits[unfilteredSymbol], amountInChunk, amountInByte, currChunk, chunkPtr, cbs);
+							int16_t length = lens[unfilteredSymbol] + ReadAtMost8BitsFromBitStream(ExtraLengthBits[unfilteredSymbol], amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks);
 							
 							uint16_t distIndexSymbol = DecodeWithHuffmanFromBitStream(distsym, distcnt, HDIST, amountInChunk, amountInByte, currChunk, chunkPtr, cbs);
-							uint16_t dist = dists[distIndexSymbol] + ReadAtMost16BitsFromBitStream(ExtraDistBits[distIndexSymbol], amountInChunk, amountInByte, currChunk, chunkPtr, cbs);
-
+							uint16_t dist = dists[distIndexSymbol] + ReadAtMost16BitsFromBitStream(ExtraDistBits[distIndexSymbol], amountInChunk, amountInByte, currChunk, chunkPtr, cbs, numDataChunks);
+							uint8_t dat = p->data[currByteInImage - dist];
+							for (int i = 0; i < length; ++i)
+							{
+								p->data[currByteInImage] = dat;
+								++currByteInImage;
+							}
+								
 
 						}
 					} while (unfilteredSymbol != 256);
@@ -473,8 +496,7 @@ void processBitStream(struct PNGheader* header, struct PNG* p, ChunkedBitStream*
 struct PNG loadPNG(const char* filename)	
 {
 	struct PNG p = { 0 };
-	FILE* file;
-	file = fopen(filename, "rb");
+	FILE* file = fopen(filename, "rb");
 	if (!file)
 	{
 		printf("ERROR in opening font file: %s\n", filename);
@@ -520,7 +542,7 @@ struct PNG loadPNG(const char* filename)
 	p.height = head.height;
 
 	//Change below to malloc correct bit depth for real image (might just leave every channel 8-bits for clean output, so idk)
-	p.image = (struct rgb*) malloc(4 * sizeof(char) * p.width * p.height);
+	p.data = (uint8_t*)malloc(4 * sizeof(char) * p.width * p.height);
 
 	freeChunk(c);
 	//check when you read end chunk
@@ -532,6 +554,7 @@ struct PNG loadPNG(const char* filename)
 	bool sRGBPresent = false;
 	uint8_t renderingIntent; //maybe this has to be handled during bitstream processing?
 
+	uint8_t numDataChunks = 0;
 	while (c.chunkType != FOURCC("IEND"))
 	{
 		c = readChunk(file);
@@ -547,6 +570,7 @@ struct PNG loadPNG(const char* filename)
 			{
 				    numberOfChunksInBitStream = AddChunkToBitStream(cbs,c.chunkSegment,c.length,numberOfChunksInBitStream);
 					c.length = 0; //stops deallocation of chunk
+					++numDataChunks;
 			} break;
 			default:
 				break;
@@ -554,9 +578,9 @@ struct PNG loadPNG(const char* filename)
 
 		freeChunk(c);
 	}
-
+	OutputDebugString((L"Number of Data Chunks:" + std::to_wstring(numDataChunks) + L"\n").c_str());
 	//use numberOfChunksInBitStream
-	processBitStream(&head,&p,cbs);
+	processBitStream(&head, &p, cbs, numDataChunks);
 
 	//https://www.color.org/icc-1_1998-09.pdf
 	//https://www.color.org/ICC-1A_1999-04.PDF

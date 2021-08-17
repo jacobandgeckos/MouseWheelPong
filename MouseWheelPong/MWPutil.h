@@ -42,12 +42,15 @@ struct rgb
 	}
 };
 
-
 struct PNG
 {
 	uint32_t width;
 	uint32_t height;
-	struct rgb * image;
+	union
+	{
+		struct rgb* image;
+		uint8_t* data;
+	};
 };
 
 uint8_t testByteOrder();
