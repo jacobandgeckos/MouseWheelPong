@@ -452,6 +452,7 @@ void drawPoly(Winfo* window, LinkedList poly, const rgb& color)
 	drawLine(window, finLine, color);
 }
 
+/// Fills monotone polygons (l/r indents are fine, but no up/down indents)
 /// Assumes Counterclockwise ordering
 void fillPoly(Winfo* window, LinkedList poly, const rgb& color)
 {
@@ -814,5 +815,12 @@ void drawQuadraticBCurveNaive(Winfo* window, uint32_t x1, uint32_t y1, uint32_t 
 		setPixelXY(window, bx, by, color);
 	}
 }
+
+#pragma endregion
+
+
+#pragma region Glyph Rendering (Fonts)
+
+// Put font drawing stuff here
 
 #pragma endregion

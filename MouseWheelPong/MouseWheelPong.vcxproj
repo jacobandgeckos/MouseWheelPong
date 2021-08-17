@@ -164,6 +164,9 @@
     <ClInclude Include="MWPtext.h" />
     <ClInclude Include="MWPutil.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\..\..\..\Documents\fonts\Museo Sans\Fonts\MuseoSans_500.ttf" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
