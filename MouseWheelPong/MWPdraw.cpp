@@ -816,6 +816,10 @@ void drawQuadraticBCurveNaive(Winfo* window, uint32_t x1, uint32_t y1, uint32_t 
 	}
 }
 
+#pragma endregion
+
+
+#pragma region Raster
 //direct copy into window
 void drawPNG(Winfo* window, const point& topLeft, const PNG& p)
 {
